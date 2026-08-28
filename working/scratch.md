@@ -40,3 +40,7 @@ Feedback from the document reviews:
 - In the documents the team composition seems very functionally aligned and not necessarily skill defined. for isntance we have the world designer doing Bevy development work. Is that the intended outcome? I do feel like we need to have some technical alignment. One thing I suggest is a a Tech Lead, to do code/PR reviews and maintain the overall technical direction. I have not run a team with this composition so I will have to defer to your intent.
 - In the Design Doc I see quite a bit of description about smallville and Project Sid's PIANO, but I don't see much about how we will integrate the unique functions of Emergence World with the spatial exeection, tools, and organized governance. I don't want to go overboard on the other functions Emergence world did for the governance but there are good additions to consider. 
 - I don't see much on the newspaper in the design doc.  that is an important part of the project. 
+
+====
+
+The current plan is to use google antigravity as the development environment.  
