@@ -12,21 +12,21 @@ This is a continuous, iterative effort, not a single build-and-ship project. Eve
 
 **Dark City** is the simulation itself — the world layer. Everything in this document about agents, cognition, memory, the spatial world, tools, governance, and instrumentation describes Dark City. Dark City has no concept of a development team; nothing here should ever reference build tooling, PR gates, or coding-agent roles. It is a virtual world where agents simulate a setting, scenario, and activities over some simulated amount of time.
 
-**Dark Factory** is the team that builds Dark City — the platform and build layer. It's a set of specialist AI coding agents (System Architect, Local Inference Specialist, World Designer, Character Sculptor, QA/Instrumentation) coordinated by a **Steward** and a **Tech Lead**: the Steward ingests backlog tickets, assigns work by role, enforces workspace boundaries, and administers pull-request gating; the Tech Lead owns technical coherence across every directory and provides the technical half of that gate. Neither has presence in, or authority over, the simulated world Dark City describes. That boundary matters enough to restate: if a document ever describes the Steward or the Tech Lead doing something to a citizen of Dark City rather than to a piece of the Dark City codebase, that document has a bug.
+**Dark Factory** is the team that builds Dark City — the platform and build layer. It's a set of specialist AI coding agents (System Architect, Local Inference Specialist, World Designer, Character Sculptor, QA/Instrumentation) orchestrated by a **Steward** and a **Tech Lead**. The Steward ingests backlog tickets, assigns work by role, enforces workspace boundaries, and gates pull requests before merge, while the Tech Lead provides architectural oversight and technical review. The Steward and Tech Lead manage the coding-agent team writing Rust — they have no presence in, and no authority over, the simulated world Dark City describes. That boundary matters enough to restate: if a document ever describes the Steward doing something to a citizen of Dark City rather than to a piece of the Dark City codebase, that document has a bug.
 
 Three companion documents build on this one:
 
-- **Dark City World Blueprint** — the full simulation spec (architecture, memory, tools, governance, instrumentation), building on §4–§10 below.
-- **Dark Factory Team Charter** — the build team's operating model, building on §2 and §11 below.
-- **Dark Factory Backlog** — phased epics and stories that implement the World Blueprint, organized per §12.
+- **Dark City World Blueprint** (`dark-city-blueprint.md`) — the full simulation spec (architecture, memory, tools, governance, instrumentation), building on §4–§10 below.
+- **Dark Factory Team Charter** (`project-charter.md`) — the build team's operating model, building on §2 and §11 below.
+- **Dark Factory Backlog** (`backlog.md`) — phased epics and stories that implement the World Blueprint, organized per §12.
 
 ## 3. Research Foundations, in Brief
 
 Three bodies of work anchor Dark City's design. Rather than pointing at them abstractly throughout this document, the mechanics we're using from each are fully explained in the sections below — this section just orients what came from where, so you know where to look if you want to go deeper on the original research later.
 
-- [**Generative Agents / "Smallville"**](/references/gen-agents-smallville.txt) established the individual-agent cognitive loop: a memory stream scored by recency, importance, and relevance; periodic reflection that synthesizes raw memories into higher-level insight; and hierarchical planning that decomposes a day into hours and then minutes. This is where Dark City's memory and planning design comes from (§5).
-- [**Project Sid / PIANO**](/references/project-sid.md) established how to run many such agents concurrently without their outputs becoming incoherent — running specialized cognitive modules in parallel, bottlenecked through a single decision-making module that keeps speech and action aligned. This is where Dark City's cognitive architecture comes from (§4).
-- [**Emergence World**](/references/emergence-world.txt) established how to ground a large agent population in a shared spatial world with location-gated tool access, decentralized self-governance, and a structured measurement framework for what the resulting society looks like. This is where Dark City's world/tool framework (§6), governance model (§7), safety stack (§8), and instrumentation (§9) come from.
+- [**Generative Agents / "Smallville"**](../references/gen-agents-smallville.txt) established the individual-agent cognitive loop: a memory stream scored by recency, importance, and relevance; periodic reflection that synthesizes raw memories into higher-level insight; and hierarchical planning that decomposes a day into hours and then minutes. This is where Dark City's memory and planning design comes from (§5).
+- [**Project Sid / PIANO**](../references/project-sid.md) established how to run many such agents concurrently without their outputs becoming incoherent — running specialized cognitive modules in parallel, bottlenecked through a single decision-making module that keeps speech and action aligned. This is where Dark City's cognitive architecture comes from (§4).
+- [**Emergence World**](../references/emergence-world.txt) established how to ground a large agent population in a shared spatial world with location-gated tool access, decentralized self-governance, and a structured measurement framework for what the resulting society looks like. This is where Dark City's world/tool framework (§6), governance model (§7), safety stack (§8), and instrumentation (§9) come from.
 
 None of these three papers describe the same system we're building — Dark City combines pieces of each and adds our own decisions where the source material doesn't specify one (most notably, fusing Smallville's planning/reflection loop into the PIANO module set, and emergence world's shared space and interactions, since Project Sid doesn't include either).
 
@@ -40,7 +40,7 @@ Two problems have to be solved for a population of LLM-driven agents to feel ali
 
 Dark City's module set, combining PIANO's named modules with Smallville's planning and reflection loop (a fusion that's our own design decision — neither source paper specifies this combination):
 
-Emergence World should be ingegrated into this where applicable.
+Emergence World should be integrated into this where applicable.
 
 | Module               | Role                                                                                                                                       |
 | -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |

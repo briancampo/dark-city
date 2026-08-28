@@ -6,12 +6,15 @@ use serde::{Deserialize, Serialize};
 use thiserror::Error;
 use uuid::Uuid;
 
-/// Strongly-typed unique identifier for an in-world simulated agent.
+/// Strongly-typed unique identifier for an in-world simulated citizen.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub struct AgentId(pub Uuid);
 
+/// Type alias standardizing in-world characters as `CitizenId`.
+pub type CitizenId = AgentId;
+
 impl AgentId {
-    /// Generates a new random `AgentId`.
+    /// Generates a new random identifier for a citizen.
     pub fn new() -> Self {
         Self(Uuid::new_v4())
     }
@@ -49,14 +52,14 @@ impl std::fmt::Display for SpatialNodeId {
 /// Errors arising when attempting an in-world tool or spatial action.
 #[derive(Debug, Error, PartialEq, Eq, Clone, Serialize, Deserialize)]
 pub enum AccessError {
-    /// Agent does not possess sufficient energy to execute the action.
+    /// Citizen does not possess sufficient energy to execute the action.
     #[error("insufficient energy to perform tool action")]
     InsufficientEnergy,
-    /// Agent is not present at the required spatial location.
+    /// Citizen is not present at the required spatial location.
     #[error("location denied: required presence at {0}")]
     LocationDenied(SpatialNodeId),
-    /// Agent lacks necessary social consent from target agent.
-    #[error("social consent required from target agent")]
+    /// Citizen lacks necessary social consent from target citizen.
+    #[error("social consent required from target citizen")]
     ConsentRequired,
     /// The specified tool is not recognized in the active tool catalog.
     #[error("unknown tool: {0}")]
@@ -74,12 +77,12 @@ pub enum ToolLayer {
     AdaptiveAccess,
 }
 
-/// Soul description loaded from Markdown character files.
+/// Soul description loaded from Markdown character files defining a citizen.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct SoulDescription {
-    /// Agent's visible character name.
+    /// Citizen's visible character name.
     pub name: String,
-    /// Agent's functional or social role.
+    /// Citizen's functional or social role in the world.
     pub role: String,
     /// High-level personality traits.
     pub traits: Vec<String>,
@@ -104,18 +107,21 @@ pub struct SpatialNode {
     pub gated_tools: Vec<String>,
 }
 
-/// Concrete tool calls executable in the simulated world.
+/// Concrete tool calls executable in the simulated world by citizens.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(tag = "tool_name", content = "arguments")]
 pub enum ToolCall {
-    /// Move agent to a specific spatial node.
+    /// Move citizen to a specific spatial node.
     GoToPlace { place_id: SpatialNodeId },
-    /// Speak directly to another agent.
-    SayToAgent { target_id: AgentId, message: String },
+    /// Speak directly to another citizen.
+    SayToAgent {
+        target_id: CitizenId,
+        message: String,
+    },
     /// Post a public governance proposal at the governance venue.
     SubmitProposal { title: String, body: String },
-    /// Transfer credits to another agent.
-    PayAgent { target_id: AgentId, amount: i64 },
+    /// Transfer credits to another citizen.
+    PayAgent { target_id: CitizenId, amount: i64 },
 }
 
 /// Common timestamped simulation event payload for event logging and AWI queries.
@@ -123,8 +129,8 @@ pub enum ToolCall {
 pub struct SimulationEvent {
     /// Unique event identifier.
     pub id: Uuid,
-    /// Agent associated with this event, if applicable.
-    pub agent_id: Option<AgentId>,
+    /// Citizen associated with this event, if applicable.
+    pub agent_id: Option<CitizenId>,
     /// Event category or name.
     pub event_type: String,
     /// Detailed JSON payload of the event.
@@ -138,9 +144,9 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_agent_id_generation() {
-        let id1 = AgentId::new();
-        let id2 = AgentId::new();
+    fn test_citizen_id_generation() {
+        let id1 = CitizenId::new();
+        let id2 = CitizenId::new();
         assert_ne!(id1, id2);
     }
 
