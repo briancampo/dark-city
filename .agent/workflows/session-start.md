@@ -3,8 +3,7 @@ description: How to bootstrap a new work session with proper context loading. Us
 ---
 
 # Dark Factory: Session Start Workflow
-
-### v1.0
+**Version:** v1.1
 
 Run this at the start of every session, before writing any code — whether it's your first session on a ticket or a continuation of one already in progress. It's short by design; skipping steps to save time is exactly the kind of shortcut the Team Charter exists to prevent.
 
@@ -36,11 +35,7 @@ Scan `/proposals/` for anything open that touches your directory or this ticket'
 
 Sketch your approach. If the ticket is bigger than something reviewable in one sitting, decompose it into a sequence of smaller tasks (Team Charter §4) and create task issues to work through the list.
 
-**If you hit a genuine ambiguity — stop here.**
-
-- For **technical or architectural ambiguity** (Blueprint interpretation, contract design, typing/abstraction questions): raise to the **Tech Lead**.
-- For **scope, sequencing, or dependency ambiguity**: raise to the **Steward**.
-- Proceeding on a guess is the failure mode this whole process exists to prevent; a short pause is always cheaper than an undocumented wrong assumption compounding through later work.
+**If you hit a genuine ambiguity — something neither the Blueprint nor Foundations resolves — stop here.** Raise a scope or process question to the Steward; raise a technical or architecture question to the Tech Lead (and the user if needed either way). Proceeding on a guess is the failure mode this whole process exists to prevent; a short pause is always cheaper than an undocumented wrong assumption compounding through later work.
 
 ## 8. Implement
 
@@ -48,13 +43,13 @@ Apply the Team Charter §4 engineering principles as you go — tests alongside 
 
 ## 9. Self-Review Against the Definition of Done
 
-Before opening a PR, check it against Team Charter §7 in full: tests, clean clippy/fmt/xtask, tool-schema contract review if applicable, config-over-constants validation, no dead code, documented interfaces, a decision log entry if warranted, and a reference to the ticket ID.
+Before opening a PR, check it against Team Charter §7 in full: tests, clean clippy, tool-schema contract review if applicable, no dead code, documented interfaces, a decision log entry if warranted, and a reference to the ticket ID.
 
 ## 10. Log and Hand Off
 
 - Write any decision log entries the session's work requires (§6 of the Charter) — before opening the PR, not after.
 - Write a short handoff note in the PR description: what's done, what's still open, anything the next session on this ticket needs to know that isn't already in the decision log.
-- Open the PR, reference the ticket ID, and request Steward & Tech Lead dual review.
+- Open the PR, reference the ticket ID, and request both Steward and Tech Lead review (Team Charter §7).
 
 ---
 

@@ -38,12 +38,12 @@ This isn't as much about trying to observe governance as the Emergence paper sug
 Feedback from the document reviews:
 
 - In the documents the team composition seems very functionally aligned and not necessarily skill defined. for isntance we have the world designer doing Bevy development work. Is that the intended outcome? I do feel like we need to have some technical alignment. One thing I suggest is a a Tech Lead, to do code/PR reviews and maintain the overall technical direction. I have not run a team with this composition so I will have to defer to your intent.
-- In the Design Doc I see quite a bit of description about smallville and Project Sid's PIANO, but I don't see much about how we will integrate the unique functions of Emergence World with the spatial exeection, tools, and organized governance. I don't want to go overboard on the other functions Emergence world did for the governance but there are good additions to consider. 
-- I don't see much on the newspaper in the design doc.  that is an important part of the project. 
+- In the Design Doc I see quite a bit of description about smallville and Project Sid's PIANO, but I don't see much about how we will integrate the unique functions of Emergence World with the spatial exeection, tools, and organized governance. I don't want to go overboard on the other functions Emergence world did for the governance but there are good additions to consider.
+- I don't see much on the newspaper in the design doc. that is an important part of the project.
 
 ====
 
-Great feedback and assessment. 
+Great feedback and assessment.
 One thing I haven't done yet is consider the inclusion of an additional team member (tech-lead). Nobody currently has cross-cutting authority to ask "is this the right abstraction," "does this actually honor config-over-constants or is it just claiming to," or "is this consistent with how the rest of the codebase does this" — across all five specialists' code. That's a real gap, and it's the kind of thing that tends to surface expensively around Phase 2–3, once there's enough surface area for architectural drift to hide in.
 
 My recommendation, split authority the way QA's cross-cutting test power is already split from implementation ownership —
@@ -53,8 +53,40 @@ Tech Lead becomes technical-authority. Owns no directory (like the Steward), but
 
 That's a clean split with no duplicated authority, but it does mean patching Charter §3.1, §3.2, §5, and §7, plus AGENTS.md's role table — all documents currently marked "Done."
 
-I'd like to get your thoughts on this and if you agree let's put that in place before we begin Epic 1.0. 
+I'd like to get your thoughts on this and if you agree let's put that in place before we begin Epic 1.0.
 
-A few additional points: 
-- I updated the agent directory path to be roles instead of agents and fixed the links in the design-doc.md file. 
-- I'd like to better understand the plan for the different crates proposed.  
+A few additional points:
+
+- I updated the agent directory path to be roles instead of agents and fixed the links in the design-doc.md file.
+- I'd like to better understand the plan for the different crates proposed.
+
+===
+
+Currently:
+complete on the review of AG updates and need to integrate the claude updates.
+reviewing backlog with mission brief update to include Docker as a starting story on deck.
+
+#### CL:
+
+I don't see anything about a user interface to follow the world and what is going on similar to what Smallville and A16Z's AI Town do. Is this considered in the current project scope?
+
+#### AG:
+
+- I want to be able to use worktrees for our development work so that we can have individual spaces for each session.  This requires us to define the working branch and worktree location for each session.  I'd like to make sure this is captured in our AGENTS.md and in our mission briefs provided to each agent when the start their task.   
+  - Each session will also have a github task issue created for them.  The branch and worktree location should follow the current worktree location but will be standardized on `\home\brian\dev\ai\worktrees\dark-city\<issue_id>-<task_slug>\` so that it will be consistent.  
+  - We must instruct each agent to work specifically in their assigned worktree and associated directory so that we don't run into issues.  
+  - I have crated a github project for the current repository.  It is Project #7 and can be found here: https://github.com/users/briancampo/projects/7 
+- Please document this in our processes, and create an issue for the currently proposed next session.  we will work on the remaining issues for our roadmap at a later time. 
+
+
+- I'd like to standardize on a couple of terms so that we make sure we are clear and precise in our language to prevent misunderstandings.
+  - For the in-game characters I think it would be good to refer to them as citizens so that we can differentiate the generic term of agent, as well as to differentiate our agent developers.
+  -
+- I added a new ticket to ensure that our project is deployable via containers (suggesting docker open to options here). This should contain the core components for the backend but should leverage an external database, and inference server.
+- It is not clear to me how the world client (bevy) is retrieving all of the necessary information it needs. I want to make sure that the backend and the world client are separable so that we can run the backend in our containerized infrastructure with the client being able to be run on a different machine (likely a workstation). At some point in the future I would ideally like to be able to run multiple world clients against our backend so that we can have many simulations supported by the backend.
+  - I am not sure if our current design supports either the separable world client and backend, and then further if our backend is designed to be able to support multiple world clients.
+
+#### Feature Discussion:
+
+- It seems like currently we have tool calls defined statically. I thought I remembered some discussion around having tool calls being able to be expanded in the future. Is this the case and have we thought through how that would be implemented in the project?
+- I think we should capture a bit more info about the citizen's emotional state and views on things. This is extremely interesting for our ability to have these citizens inhabiting a world that feels alive for players. It could also allow for us to seed conditions for a citizen and enhance the depth of their role in the world to improve the player's experience.

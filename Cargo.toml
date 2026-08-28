@@ -1,0 +1,36 @@
+[workspace]
+resolver = "2"
+members = [
+    "crates/dark_city_core",
+    "crates/dark_city_inference",
+    "crates/dark_city_cognitive",
+    "crates/dark_city_world",
+    "crates/dark_city_server",
+    "crates/dark_city_instrumentation",
+    "xtask",
+]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+license = "MIT OR Apache-2.0"
+authors = ["Dark Factory Team"]
+
+[workspace.dependencies]
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+uuid = { version = "1.13", features = ["v4", "serde"] }
+chrono = { version = "0.4", features = ["serde"] }
+thiserror = "2.0"
+tokio = { version = "1.43", features = ["full"] }
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+async-trait = "0.1"
+
+# Internal crate dependencies
+dark_city_core = { path = "crates/dark_city_core" }
+dark_city_inference = { path = "crates/dark_city_inference" }
+dark_city_cognitive = { path = "crates/dark_city_cognitive" }
+dark_city_world = { path = "crates/dark_city_world" }
+dark_city_server = { path = "crates/dark_city_server" }
+dark_city_instrumentation = { path = "crates/dark_city_instrumentation" }
