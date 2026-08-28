@@ -68,25 +68,37 @@ reviewing backlog with mission brief update to include Docker as a starting stor
 
 #### CL:
 
-I don't see anything about a user interface to follow the world and what is going on similar to what Smallville and A16Z's AI Town do. Is this considered in the current project scope?
+I don't see anything about a user interface to follow the world visually and see the world play out similar to what Smallville and A16Z's AI Town do. Is this considered in the current project scope?
 
-#### AG:
-
-- I want to be able to use worktrees for our development work so that we can have individual spaces for each session.  This requires us to define the working branch and worktree location for each session.  I'd like to make sure this is captured in our AGENTS.md and in our mission briefs provided to each agent when the start their task.   
-  - Each session will also have a github task issue created for them.  The branch and worktree location should follow the current worktree location but will be standardized on `\home\brian\dev\ai\worktrees\dark-city\<issue_id>-<task_slug>\` so that it will be consistent.  
-  - We must instruct each agent to work specifically in their assigned worktree and associated directory so that we don't run into issues.  
-  - I have crated a github project for the current repository.  It is Project #7 and can be found here: https://github.com/users/briancampo/projects/7 
-- Please document this in our processes, and create an issue for the currently proposed next session.  we will work on the remaining issues for our roadmap at a later time. 
-
-
-- I'd like to standardize on a couple of terms so that we make sure we are clear and precise in our language to prevent misunderstandings.
-  - For the in-game characters I think it would be good to refer to them as citizens so that we can differentiate the generic term of agent, as well as to differentiate our agent developers.
-  -
-- I added a new ticket to ensure that our project is deployable via containers (suggesting docker open to options here). This should contain the core components for the backend but should leverage an external database, and inference server.
 - It is not clear to me how the world client (bevy) is retrieving all of the necessary information it needs. I want to make sure that the backend and the world client are separable so that we can run the backend in our containerized infrastructure with the client being able to be run on a different machine (likely a workstation). At some point in the future I would ideally like to be able to run multiple world clients against our backend so that we can have many simulations supported by the backend.
   - I am not sure if our current design supports either the separable world client and backend, and then further if our backend is designed to be able to support multiple world clients.
+
+===
+
+This is great feedback and highlights a bit of a misunderstanding on my part.  I misunderstood that Bevy was being used for handling of the core agent functions and not just being used as the world client (viewer).  I may have miscommunicated during the initial phases of the project what my intent was. That could have led us to where we are now.  
+
+The second part about multiple clients was more trying to see if there was the ability to have a sort of tenant approach to things and how we might abstract multiple concurrent worlds.  This isn't trying to replicate the same world in multiple clients but trying to replicate multiple worlds each with their own client.  Hope this makes sense and happy to discuss further. 
+
+Given your knock on issues point I agree it may be that we need to think through a series of documentation changes to resolve the group of things.  This is much better done now while we are very early in the project rather than later when it will be much harder. 
+
+Your suggestion for underlying fix of moving things to the backend seems to align with the conceptual idea was thinking of. If ECS is still the right idea that is fine. We can still run ECS and Bevy headlessly (there is also bevy_ecs for headless running as well) if that is the right approach on the backend and have a world client for the front end that is a different Bevy instance.  
+
+====
+
+Plan looks good with a few comments at the end.  As we are working through this I also decided to change a few things.  Please review the below and make sure that the changes are reflected in both scripts so that they will operate correctly. 
+
+I moved this out of my personal github (briancampo) and into the organization's github (Mindstar Studion) account now that we are ready to start. 
+Repo: https://github.com/Mindstar-Studio/dark-city 
+project: https://github.com/orgs/Mindstar-Studio/projects/2
+
+I also created an issue for the epic as I want to be able to track epic to story to task.  Not all stories will need multiple tasks but I want to have the ability to break down large stories into multiple tasks and continue the parent child relationship.  
+I like the structure you have for the story issues. The epic I created only has the backlog table as the description so if you have a better structure/template for our epics you can modify that to improve it. 
+
+Feedback items: 
+- Create Story or create epic: I am not sure that the backlog document captures all of the detail we need for a story and especially if the story is further broken down into multiple tasks that we will have enough information in the backlog document to automatically create a well defined and comprehensive issue description. I could be off on this but would like you to review. The idea of using an issue body file that the agent constructs seemed to make sense since there was additional info needed but will defer to your insight. 
 
 #### Feature Discussion:
 
 - It seems like currently we have tool calls defined statically. I thought I remembered some discussion around having tool calls being able to be expanded in the future. Is this the case and have we thought through how that would be implemented in the project?
 - I think we should capture a bit more info about the citizen's emotional state and views on things. This is extremely interesting for our ability to have these citizens inhabiting a world that feels alive for players. It could also allow for us to seed conditions for a citizen and enhance the depth of their role in the world to improve the player's experience.
+

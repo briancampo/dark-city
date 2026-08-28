@@ -29,7 +29,7 @@ Dark City is a platform for populating constructed worlds with AI **citizens** a
 
 Every development task and agent session operates in an isolated git worktree created for that specific GitHub task issue.
 
-- **GitHub Project Tracking:** All issues are managed in [GitHub Project #7](https://github.com/users/briancampo/projects/7).
+- **GitHub Project Tracking:** All issues are managed in [DC Board (Project #2)](https://github.com/orgs/Mindstar-Studio/projects/2).
 - **Worktree Location Standard:** `/home/brian/dev/ai/worktrees/dark-city/<issue_id>-<task_slug>/`
 - **Branch Naming Standard:** `<issue_id>-<task_slug>`
 - **STRICT WORKSPACE BOUNDARY:** You MUST execute all commands and edits strictly inside your assigned worktree directory. Never perform file operations, builds, or git commits outside your assigned worktree path.
@@ -52,7 +52,7 @@ Full detail, including QA and Tech Lead cross-cutting authorities and how worksp
 ## How We Work, Condensed
 
 - **Isolated Worktree:** Verify your current working directory matches your assigned worktree before making any changes.
-- **Dual-Gate PR Approval:** Every PR requires sign-off from both the Steward (process & verification) and the Tech Lead (architectural soundness & contracts) per [Team Charter §7](docs/project-charter.md#7-definition-of-done-pr-dual-gate).
+- **Dual-Gate PR Approval:** Every PR requires sign-off from both the Steward (process & verification) and the Tech Lead (architectural soundness & contracts) per [Team Charter §7](docs/project-charter.md#7-definition-of-done-pr-gate).
 - **Clean CI:** No merged code without passing tests (`cargo nextest run`) and clean `cargo clippy --all-targets -- -D warnings`, `cargo fmt --check`, and `cargo xtask check`.
 - **Atomic PRs:** Decompose large tickets rather than opening monolithic PRs.
 - **Public Interface Documentation:** Public functions and structs get doc comments explaining _why_ they exist.
@@ -63,7 +63,36 @@ Full detail, including QA and Tech Lead cross-cutting authorities and how worksp
   - **Scope / dependency ambiguity:** Pause and raise to the **Steward** and/or User as necessary.
   - Never guess silently — a wrong guess is expensive to unwind.
 
-## Commands
+## Automation & Task Commands
+
+The repository provides two dedicated task automation scripts and a `dark-factory-cli` skill.
+
+### 1. Developer & Task Lifecycle (`scripts/gh-task-ops.sh`)
+
+```bash
+scripts/gh-task-ops.sh list                # List backlog issues
+scripts/gh-task-ops.sh info <ticket_or_id> # View issue/ticket details (e.g. info 1.1.0 or info 2)
+scripts/gh-task-ops.sh assign <id>         # Setup branch & isolated worktree
+scripts/gh-task-ops.sh check               # Run all 4 quality gates (fmt, clippy, nextest, xtask)
+scripts/gh-task-ops.sh pr-create           # Run checks and create PR with DoD checklist
+scripts/gh-task-ops.sh pr-status           # Inspect PR CI checks and review status
+scripts/gh-task-ops.sh finish              # Squash-merge PR, cleanup worktree, sync main
+scripts/gh-task-ops.sh sync                # Pull latest changes into main
+```
+
+### 2. Backlog & Hierarchy Management (`scripts/gh-issue-ops.sh`)
+
+```bash
+scripts/gh-issue-ops.sh scaffold-brief <id> # Generate mission brief in working/briefs/<id>-brief.md
+scripts/gh-issue-ops.sh create-story <id>   # Dispatch story from backlog/brief (links parent epic)
+scripts/gh-issue-ops.sh link <parent> <child> # Link sub-issue under parent Epic/Story
+scripts/gh-issue-ops.sh sub-issues <parent> # View child sub-issues and progress
+scripts/gh-issue-ops.sh update <id> [flags] # Update status, priority, size, estimate on board
+scripts/gh-issue-ops.sh fields              # Inspect Project #2 custom fields and options
+scripts/gh-issue-ops.sh epics               # List open Epics
+```
+
+### 3. Rust Quality Gates (`cargo xtask check`)
 
 ```bash
 cargo check
@@ -72,8 +101,6 @@ cargo nextest run
 cargo fmt --check
 cargo xtask check
 ```
-
-All commands must be clean before you open a PR.
 
 ## Where Things Live
 
@@ -90,8 +117,10 @@ assets/souls/                     Soul Markdown files (Character Sculptor)
 crates/dark_city_instrumentation/ AWI metrics pipeline (QA/Instrumentation)
 tests/                            Integration tests (QA/Instrumentation cross-cutting)
 xtask/                            Repository CI runner (System Architect / QA)
+scripts/                          Task & Issue automation utilities (gh-task-ops, gh-issue-ops)
 decisions/                        Architecture decision records (Steward maintains)
 proposals/                        Cross-boundary RFCs (Tech Lead & Steward arbitrate)
+working/briefs/                   Scaffolded mission briefs for dispatchable stories
 ```
 
 ## If You're Blocked
