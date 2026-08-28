@@ -43,4 +43,18 @@ Feedback from the document reviews:
 
 ====
 
-The current plan is to use google antigravity as the development environment.  
+Great feedback and assessment. 
+One thing I haven't done yet is consider the inclusion of an additional team member (tech-lead). Nobody currently has cross-cutting authority to ask "is this the right abstraction," "does this actually honor config-over-constants or is it just claiming to," or "is this consistent with how the rest of the codebase does this" — across all five specialists' code. That's a real gap, and it's the kind of thing that tends to surface expensively around Phase 2–3, once there's enough surface area for architectural drift to hide in.
+
+My recommendation, split authority the way QA's cross-cutting test power is already split from implementation ownership —
+
+Steward stays process-authority. Dispatch, DoD gate, decision log admin, RFC process admin.
+Tech Lead becomes technical-authority. Owns no directory (like the Steward), but has read/comment authority across all of /src, is a required second sign-off on every PR alongside the Steward's DoD gate, and — this is the part I'd flag most — is probably the better fit than the Steward for Charter §3.2's "first point of escalation on a genuine ambiguity." Judging whether something's a small implementation detail or a real architecture fork is a technical call, not a process one. The Steward would keep first-point-of-contact for scope/sequencing ambiguity ("is this ticket sized right," "does this depend on unmerged work"); Tech Lead would own technical/architecture ambiguity.
+
+That's a clean split with no duplicated authority, but it does mean patching Charter §3.1, §3.2, §5, and §7, plus AGENTS.md's role table — all documents currently marked "Done."
+
+I'd like to get your thoughts on this and if you agree let's put that in place before we begin Epic 1.0. 
+
+A few additional points: 
+- I updated the agent directory path to be roles instead of agents and fixed the links in the design-doc.md file. 
+- I'd like to better understand the plan for the different crates proposed.  
