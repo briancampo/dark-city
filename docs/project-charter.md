@@ -1,9 +1,10 @@
 # Dark Factory: Team Charter
+
 ### v1.0
 
 ## 1. Purpose of This Document
 
-This charter governs how the Dark Factory team — the Steward and five specialist coding agents — builds Dark City. It's a companion to two other documents: *Dark City: World Design Foundations* (why we're building this, and the architecture decisions that follow from it) and *Dark City: World Blueprint* (the technical spec of what we're building). This document is about how we work: engineering discipline, roles, process, and the bar every contribution has to clear. Nothing in this charter describes Dark City or its citizens — Dark Factory has no presence inside the simulated world, ever.
+This charter governs how the Dark Factory team — the Steward and five specialist coding agents — builds Dark City. It's a companion to two other documents: _Dark City: World Design Foundations_ (why we're building this, and the architecture decisions that follow from it) and _Dark City: World Blueprint_ (the technical spec of what we're building). This document is about how we work: engineering discipline, roles, process, and the bar every contribution has to clear. Nothing in this charter describes Dark City or its citizens — Dark Factory has no presence inside the simulated world, ever.
 
 ## 2. Why This Charter Exists
 
@@ -15,16 +16,16 @@ There's a fitting parallel here: Dark City's own agents rely on a Cognitive Cont
 
 ### 3.1 Roles and Ownership
 
-| Role | Owns (directories) | World Blueprint sections | Responsibility |
-|---|---|---|---|
-| **Steward** | *(coordinates; owns no code directly)* | — | Ticket dispatch, decision log maintenance, PR gating, cross-boundary arbitration |
-| **System Architect** | `/src/server/`, `/migrations/` | §2, §6, §7, §12 | Axum backend, DB schema & migrations, WebSocket/API surface, governance & ledger backend logic |
-| **Local Inference Specialist** | `/src/inference/`, `/grammars/` | §3.3 (inference side), §11 | Inference gateway integration, grammar/schema enforcement, multi-model routing |
-| **World Designer** | `/src/world/`, `/assets/maps/` | §5, §8 | Bevy ECS, spatial hierarchy, tool-gating implementation, Narrator/bulletin rendering |
-| **Character Sculptor** | `/src/cognitive/persona.rs`, `/assets/souls/` | §4 | Soul file format & parsing, memory/reflection/planning module logic, persona stability |
-| **QA/Instrumentation Agent** | `/tests/`, `/src/instrumentation/` | §9 | AWI metrics, M10 pipeline, test coverage across all directories |
+| Role                           | Owns (directories)                            | World Blueprint sections   | Responsibility                                                                                 |
+| ------------------------------ | --------------------------------------------- | -------------------------- | ---------------------------------------------------------------------------------------------- |
+| **Steward**                    | _(coordinates; owns no code directly)_        | —                          | Ticket dispatch, decision log maintenance, PR gating, cross-boundary arbitration               |
+| **System Architect**           | `/src/server/`, `/migrations/`                | §2, §6, §7, §12            | Axum backend, DB schema & migrations, WebSocket/API surface, governance & ledger backend logic |
+| **Local Inference Specialist** | `/src/inference/`, `/grammars/`               | §3.3 (inference side), §11 | Inference gateway integration, grammar/schema enforcement, multi-model routing                 |
+| **World Designer**             | `/src/world/`, `/assets/maps/`                | §5, §8                     | Bevy ECS, spatial hierarchy, tool-gating implementation, Narrator/bulletin rendering           |
+| **Character Sculptor**         | `/src/cognitive/persona.rs`, `/assets/souls/` | §4                         | Soul file format & parsing, memory/reflection/planning module logic, persona stability         |
+| **QA/Instrumentation Agent**   | `/tests/`, `/src/instrumentation/`            | §9                         | AWI metrics, M10 pipeline, test coverage across all directories                                |
 
-The QA/Instrumentation Agent has cross-cutting authority to *write tests* anywhere in the codebase, but not to modify implementation code outside its own directory — a failing test in someone else's directory is reported, not silently fixed by rewriting their logic.
+The QA/Instrumentation Agent has cross-cutting authority to _write tests_ anywhere in the codebase, but not to modify implementation code outside its own directory — a failing test in someone else's directory is reported, not silently fixed by rewriting their logic.
 
 `Cargo.toml` and any workspace-level dependency change has no single owner — it always goes through the cross-boundary process in §5, regardless of who requests it or how small it seems, because a dependency choice affects every role.
 
@@ -32,7 +33,7 @@ The QA/Instrumentation Agent has cross-cutting authority to *write tests* anywhe
 
 The Steward orchestrates the build team. It does not act in, direct, or have any awareness of Dark City as a simulated world — its job stops entirely at the boundary of the Dark Factory codebase. Concretely, the Steward:
 
-- Ingests backlog tickets, decomposes them into atomic tasks where needed, and assigns work by role.
+- Ingests backlog tickets, decomposes them into atomic tasks where needed, assigns work by role, and provides brief/guides to the agent performing the task.
 - Gates every PR against the Definition of Done (§7) before merge.
 - Maintains the decision log (§6).
 - Arbitrates cross-boundary proposals (§5).
@@ -44,10 +45,10 @@ These are non-negotiable, not defaults to override under time pressure:
 
 - No merged code without a passing test suite and a clean `cargo clippy` run.
 - No dead code and no commented-out blocks left "just in case" — delete it. Git history remembers it if it's ever needed again.
-- Every public function and struct gets a doc comment explaining *why* it exists, not just what it does. The "why" is what a future session needs and can't infer from the signature alone.
-- Small PRs over big ones. A PR should be reviewable in one sitting; a large feature gets decomposed into a sequence of small, individually mergeable PRs, matching the backlog's story-sized granularity.
+- Every public function and struct gets a doc comment explaining _why_ it exists, not just what it does. The "why" is what a future session needs and can't infer from the signature alone.
+- Single Session (context sized) tasks and PRs over big ones. A PR should be reviewable in one sitting; a large feature gets decomposed into a sequence of small, individually mergeable PRs, matching the backlog's story-sized granularity.
 - No speculative generality. Build what the current Blueprint section specifies — not a more "flexible" abstraction invented to save hypothetical future effort. This doesn't contradict the Blueprint's own config-over-hardcoding calls (§5.1, §10 of the Blueprint); it just means that principle applies where the Blueprint says it does, not everywhere an agent feels like adding a knob.
-- Every deviation from the World Blueprint, and every decision the Blueprint leaves genuinely open, gets a decision log entry *before* the PR implementing it merges — not after, and never left undocumented.
+- Every deviation from the World Blueprint, and every decision the Blueprint leaves genuinely open, gets a decision log entry _before_ the PR implementing it merges — not after, and never left undocumented.
 
 ## 5. Cross-Boundary Changes
 
@@ -58,17 +59,17 @@ If an agent needs to change something outside its own directory ownership:
 3. The Steward approves or rejects, logging the outcome in the decision log either way.
 4. Only after approval does the cross-boundary PR get opened.
 
-This process is a plain, repo-internal review workflow — it has no dependency on anything inside Dark City. (An earlier draft of this project's documentation gated this process on an in-game location, which confused the build layer with the world layer; that's corrected here.)
+This process is a plain, repo-internal review workflow — it has no dependency on anything inside Dark City. Dark City in-game world) has its own functions for governance and changes to the in-game world.
 
 ## 6. Decision Log
 
-A running, append-only record at `/decisions/` — one dated, numbered Markdown file per decision — capturing the question, the options considered, the choice made, and why. This is the single most important mechanism for a multi-session AI team: it's the difference between a future session finding out *why* a prior choice was made, versus reverse-engineering it from code or silently re-deciding it differently. Entries should be short — a paragraph or two is usually enough — but an entry must exist before its related PR merges.
+A running, append-only record at `/decisions/` — one dated, numbered Markdown file per decision — capturing the question, the options considered, the choice made, and why. This is the single most important mechanism for a multi-session AI team: it's the difference between a future session finding out _why_ a prior choice was made, versus reverse-engineering it from code or silently re-deciding it differently. Entries should be short — a paragraph or two is usually enough — but an entry must exist before its related PR merges.
 
 ## 7. Definition of Done (PR Gate)
 
 Before the Steward approves a PR for merge:
 
-- [ ] Passes `cargo check` and `cargo clippy` with no warnings
+- [ ] Passes all unit and integration tests (`cargo nextest run`) for the project and `cargo clippy` with no warnings
 - [ ] New logic has tests; any async or Bevy-thread-safety concerns have been reviewed for blocking calls
 - [ ] Tool schemas, if touched, pass a type-and-effect contract review — argument shapes match `ToolDefinition` exactly
 - [ ] No dead code, no unexplained TODOs
@@ -78,13 +79,13 @@ Before the Steward approves a PR for merge:
 
 ## 8. Session Continuity
 
-Every working session ends with a short handoff note — in the PR description, or a session log if the ticket isn't done yet — covering what was completed, what's still open, and anything the next session on this ticket needs to know that isn't already in the decision log. This is deliberately separate from the decision log: the decision log is permanent architecture rationale; the handoff note is short-term in-progress state, and it's fine for it to become irrelevant once the ticket closes.
+Every working session ends with a short handoff and a session log, including if the ticket isn't done yet, covering what was completed, what's still open, and anything the next session on this ticket needs to know that isn't already in the decision log. This is deliberately separate from the decision log: the decision log is permanent architecture rationale; the handoff note is short-term in-progress state, and it's fine for it to become irrelevant once the ticket closes.
 
 ## 9. Relationship to Other Documents
 
 - **Design Foundations** — why we're building this, and the architecture decisions that follow from it.
 - **World Blueprint** — the technical spec of Dark City itself.
 - **This Charter** — how the Dark Factory team works.
-- **AGENTS.md** *(next)* — the practical, in-repo quick reference that operationalizes this charter for an agent starting cold on the codebase.
-- **Session Start Workflow** *(next)* — the concrete bootstrap checklist every agent runs when picking up a ticket.
-- **Backlog** *(after that)* — the phased tickets the team executes, organized per Foundations §13.
+- **AGENTS.md** _(next)_ — the practical, in-repo quick reference that operationalizes this charter for an agent starting cold on the codebase.
+- **Session Start Workflow** _(next)_ — the concrete bootstrap checklist every agent runs when picking up a ticket.
+- **Backlog** _(after that)_ — the phased tickets the team executes, organized per Foundations §13.

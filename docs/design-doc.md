@@ -10,9 +10,9 @@ This is a continuous, iterative effort, not a single build-and-ship project. Eve
 
 ## 2. Two Projects: Dark City and Dark Factory
 
-**Dark City** is the simulation itself — the world layer. Everything in this document about agents, cognition, memory, the spatial world, tools, governance, and instrumentation describes Dark City. Dark City has no concept of a development team; nothing here should ever reference build tooling, PR gates, or coding-agent roles.
+**Dark City** is the simulation itself — the world layer. Everything in this document about agents, cognition, memory, the spatial world, tools, governance, and instrumentation describes Dark City. Dark City has no concept of a development team; nothing here should ever reference build tooling, PR gates, or coding-agent roles. It is a virtual world where agents simulate a setting, scenario, and activities over some simulated amount of time.
 
-**Dark Factory** is the team that builds Dark City — the build layer. It's a set of specialist AI coding agents (System Architect, Local Inference Specialist, World Designer, Character Sculptor, QA/Instrumentation) orchestrated by a **Steward**, which ingests backlog tickets, assigns work by role, enforces workspace boundaries, and gates pull requests before merge. The Steward manages the coding-agent team writing Rust — it has no presence in, and no authority over, the simulated world Dark City describes. That boundary matters enough to restate: if a document ever describes the Steward doing something to a citizen of Dark City rather than to a piece of the Dark City codebase, that document has a bug.
+**Dark Factory** is the team that builds Dark City — the platform and build layer. It's a set of specialist AI coding agents (System Architect, Local Inference Specialist, World Designer, Character Sculptor, QA/Instrumentation) orchestrated by a **Steward**, which ingests backlog tickets, assigns work by role, enforces workspace boundaries, and gates pull requests before merge. The Steward manages the coding-agent team writing Rust — it has no presence in, and no authority over, the simulated world Dark City describes. That boundary matters enough to restate: if a document ever describes the Steward doing something to a citizen of Dark City rather than to a piece of the Dark City codebase, that document has a bug.
 
 Three companion documents build on this one:
 
@@ -24,11 +24,11 @@ Three companion documents build on this one:
 
 Three bodies of work anchor Dark City's design. Rather than pointing at them abstractly throughout this document, the mechanics we're using from each are fully explained in the sections below — this section just orients what came from where, so you know where to look if you want to go deeper on the original research later.
 
-- **Generative Agents / "Smallville"** (Park et al., 2023) established the individual-agent cognitive loop: a memory stream scored by recency, importance, and relevance; periodic reflection that synthesizes raw memories into higher-level insight; and hierarchical planning that decomposes a day into hours and then minutes. This is where Dark City's memory and planning design comes from (§5).
-- **Project Sid / PIANO** (Altera.AL, 2024) established how to run many such agents concurrently without their outputs becoming incoherent — running specialized cognitive modules in parallel, bottlenecked through a single decision-making module that keeps speech and action aligned. This is where Dark City's cognitive architecture comes from (§4).
-- **Emergence World** (Emergence AI, 2026) established how to ground a large agent population in a shared spatial world with location-gated tool access, decentralized self-governance, and a structured measurement framework for what the resulting society looks like. This is where Dark City's world/tool framework (§6), governance model (§7), safety stack (§8), and instrumentation (§9) come from.
+- [**Generative Agents / "Smallville"**](/references/generative-agents-simulacra-smallville.txt) established the individual-agent cognitive loop: a memory stream scored by recency, importance, and relevance; periodic reflection that synthesizes raw memories into higher-level insight; and hierarchical planning that decomposes a day into hours and then minutes. This is where Dark City's memory and planning design comes from (§5).
+- [**Project Sid / PIANO**](/references/project-sid.md) established how to run many such agents concurrently without their outputs becoming incoherent — running specialized cognitive modules in parallel, bottlenecked through a single decision-making module that keeps speech and action aligned. This is where Dark City's cognitive architecture comes from (§4).
+- [**Emergence World**](/references/emergence-world.md) established how to ground a large agent population in a shared spatial world with location-gated tool access, decentralized self-governance, and a structured measurement framework for what the resulting society looks like. This is where Dark City's world/tool framework (§6), governance model (§7), safety stack (§8), and instrumentation (§9) come from.
 
-None of these three papers describe the same system we're building — Dark City combines pieces of each and adds our own decisions where the source material doesn't specify one (most notably, fusing Smallville's planning/reflection loop into the PIANO module set, since Project Sid doesn't include either).
+None of these three papers describe the same system we're building — Dark City combines pieces of each and adds our own decisions where the source material doesn't specify one (most notably, fusing Smallville's planning/reflection loop into the PIANO module set, and emergence world's shared space and interactions, since Project Sid doesn't include either).
 
 ## 4. Cognitive Architecture: PIANO
 
@@ -39,6 +39,8 @@ Two problems have to be solved for a population of LLM-driven agents to feel ali
 **Coherence.** Running several modules concurrently creates a new problem: independent modules can disagree with each other. An agent's dialogue module might say "I'll help you," while its action module does something else entirely. Dark City solves this the way PIANO does — with a single **Cognitive Controller** module that is the only place high-level deliberate decisions get made. Every other module's output must pass through this controller as a bottleneck; once it decides on a course of action, that decision is broadcast to condition the downstream modules (especially the modules responsible for speech and for executing actions in the world), so what an agent says and what it does stay aligned.
 
 Dark City's module set, combining PIANO's named modules with Smallville's planning and reflection loop (a fusion that's our own design decision — neither source paper specifies this combination):
+
+Emergence World should be ingegrated into this where applicable.
 
 | Module               | Role                                                                                                                                       |
 | -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
@@ -91,7 +93,7 @@ Dark City's spatial world is a hierarchy (Town → Building → Room → Entity)
 
 ## 7. Governance — Decentralized by Default
 
-Dark City has no built-in administrator, steward, or gatekeeper inside the simulation. Any agent physically present at a governance venue (a town hall, in the default setting) may draft a proposal; it passes when a defined threshold of present agents vote in favor (70% as a starting point). This is a deliberate choice, not an oversight: agents self-organizing under a shared rule set — including the possibility that they organize badly, or not at all — is itself one of the more interesting emergent phenomena a sculpted scenario can produce, and it's something we want to be able to observe rather than pre-empt. It also composes cleanly with §10: a _scenario_ could start agents with an existing constitution, a designated leader role, or no governance venue at all, and decentralized self-governance remains the underlying mechanism either way.
+Dark City has no built-in administrator, steward, or gatekeeper inside the simulation. When governance is enabled, any agent physically present at a governance venue (a town hall, in the default setting) may draft a proposal; it passes when a defined threshold of present agents vote in favor (70% as a starting point). This is a deliberate choice, not an oversight: agents self-organizing under a shared rule set — including the possibility that they organize badly, or not at all — is itself one of the more interesting emergent phenomena a sculpted scenario can produce, and it's something we want to be able to observe rather than pre-empt. It also composes cleanly with §10: a _scenario_ could start agents with an existing constitution, a designated leader role, or no governance venue at all, and decentralized self-governance remains the underlying mechanism either way.
 
 ## 8. Safety Stack
 
@@ -138,7 +140,8 @@ The inference gateway is designed to be model-agnostic from the start: any agent
 
 ## 12. Tech Stack
 
-Rust (Axum for the backend, Bevy 0.19 for the spatial client), Postgres with pgvector for persistence. This is our own architectural choice — it reuses the game engine this project is a corollary to, and it supports the team's ongoing investment in Rust. It is not inherited from any of the source research; none of the systems in §3 use this stack.
+The backend must be able to run in preconfigured containers that are self contained exposing the API that the Bevy world client can access.
+Rust (Axum for the backend, Bevy 0.19 for the world's spatial client), Postgres with pgvector for persistence. This is our own architectural choice — it reuses the game engine this project is a corollary to, and it supports the team's ongoing investment in Rust. It is not inherited from any of the source research; none of the systems in §3 use this stack.
 
 ## 13. Phased Roadmap
 

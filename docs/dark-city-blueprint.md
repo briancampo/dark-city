@@ -267,7 +267,7 @@ CREATE TABLE proposals (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     title TEXT NOT NULL,
     body TEXT NOT NULL,
-    category VARCHAR(32),                 -- 'rule_change','new_tool','resource_allocation','sanction'
+    category VARCHAR(32),                            -- 'rule_change','new_tool','resource_allocation','sanction'
     status VARCHAR(16) NOT NULL DEFAULT 'awaiting',  -- awaiting, passed, rejected, implemented
     votes_for INT NOT NULL DEFAULT 0,
     votes_against INT NOT NULL DEFAULT 0,
@@ -305,13 +305,36 @@ current_balance = last_recorded_balance - decay_rate * hours_since(last_ledger_e
 
 ## 8. Narrator / World Chronicle
 
-A system-level, non-autonomous persona — never in the agent roster, never votes, never holds tools — triggered on a fixed cadence (every 12 in-game hours) rather than acting on its own initiative:
+Dark City needs a shared public record that is accessible in world and recorded for external observers (user). This must be more than just a database of events; something the agents themselves can read, react to, and build social reality around. Without one, agents have no way to develop a collective memory of their own society; everything either has to be witnessed firsthand or is invisible. The Narrator is the system that produces this record: an in-world newspaper, generated from the same event log everything else in this document already writes to.
 
-1. Query the event log since the last edition for high-salience dialogue, high-impact tool calls (proposals, large transfers, criminal actions), and governance milestones.
-2. Prompt a "News Reporter" persona, instructed to report only DB-verified events and not speculate, to synthesize a structured Markdown edition.
-3. Broadcast the edition over `narrator::edition_published`; the Bevy client renders it onto an in-world bulletin entity (visible to agents within a fixed proximity radius via the same `bevy_spatial` index from §5.1), and the full history is available via `GET /api/v1/narrator/editions`.
+### 8.1 The Narrator as a Persona
 
-The Narrator is the only invisible system agent in Dark City — any future scenario-scripted character is a normal citizen, subject to the same memory system and tool gating as everyone else.
+The Narrator is authored as a Soul file, exactly like any citizen (§4.5) — it has a name, a voice, and a speaking style — with two differences that make it a system persona rather than a citizen: it is **non-autonomous** (it never runs the PIANO loop, never plans, never acts on its own initiative — it only activates when the pipeline below triggers it) and it is **invisible** to the tool/governance systems (it never appears in the agent roster, never votes, never holds tools or credits). Authoring it as a Soul file rather than a bespoke prompt means a different scenario package (§10) can swap in a different Narrator voice — a tabloid gossip column for one setting, a dry official record for another — without touching the pipeline that drives it.
+
+### 8.2 Editorial Pipeline
+
+Triggered on a fixed cadence (every 12 in-game hours by default, configurable per scenario) rather than continuously:
+
+1. **Data acquisition.** Query the event log since the last edition for: high-salience dialogue (filtered by length and sentiment divergence, so routine chatter doesn't crowd out anything noteworthy), high-impact tool calls (passed proposals, large ledger transfers, any hard-violation action, major world events, significant character interactions, etc), and governance milestones (new proposals, votes, constitutional changes).
+2. **Synthesis.** Prompt the Narrator persona with a structured template, enforced the same way tool-call JSON is enforced (§5.2) — the Narrator can only emit content in the required shape, and it is explicitly instructed to report only DB-verified events and never speculate about what a citizen might do next. The default editorial structure has four standing sections:
+   - **Masthead** — edition title and date.
+   - **Citizen Activities** — significant citizen activities including current events, notable changes within Dark City, and citizen reporting.
+   - **Social Fabric** — significant cultural shifts, public activities, notable alliances, anything drawn from `agent_relationships` deltas.
+   - **Governance & Legislative Record** — proposals passed or rejected, constitutional changes, notable votes.
+   - **Economy & Frontier** — Citizen business, economic, and ledger activity above a threshold, resource scarcity events, newly explored or discovered world concepts.
+3. **Publication.** The edition is stored in `narrator_editions` (id, published_at, articles) table and `articles`(id, title, author, topic, content markdown) and broadcast over the `narrator::edition_published` WebSocket topic.
+
+### 8.3 In-World Rendering and the Feedback Loop
+
+The Bevy client renders the latest edition onto an in-world bulletin entity. To keep this cheap on the fast path, the bulletin's content panel is only actually rendered when an agent's `Transform` is within a fixed radius of the bulletin (reusing the `bevy_spatial` index from §5.1) — no interactive UI, just a readable panel, consistent with keeping the render loop free of anything that could stutter it. Agents without physical access can still retrieve the full edition history via `GET /api/v1/narrator/editions` from their home, but visiting the physical bulletin is the cheaper path and the one the Soul-file-level social norms should nudge agents toward.
+
+Critically, reading an edition isn't just flavor — it closes the loop back into the cognitive architecture. When an agent reads a bulletin (in person or via the API), the relevant edition content is written into that agent's episodic memory stream (§4.2) as a normal memory, individually meaningful `articles` are importance-rated like any other observation. This is what makes the Narrator function as the "shared cultural history" it's meant to be: agents can recall, reflect on, and plan around events they never witnessed firsthand, purely because the newspaper reported them. It's also a natural, low-friction way to reduce hallucinated claims about world state — an agent who read about a proposal's passage has an actual grounded memory of it, not just an assumption.
+
+### 8.4 Why This Matters for Instrumentation
+
+The Narrator is also the most direct way a human reviewer gains in-world association and insights from the AWI dashboard (§9) — the metrics say _what_ happened in aggregate, and the newspaper archive says _what it looked like as a story_. Edition volume and content are themselves informative for M6 (Public Expression) and M9 (Constitutional Growth), and reviewing a run's full edition archive end to end is the fastest way for a human to sanity-check whether a scenario produced something worth studying further, before diving into raw logs.
+
+The Narrator is the only invisible system agent initially present in Dark City — any future scenario-scripted character is a normal citizen, subject to the same memory system and tool gating as everyone else.
 
 ## 9. Safety & Instrumentation Implementation
 
@@ -371,14 +394,14 @@ Deferred to Phase 3 per the Foundations roadmap, sketched now so nothing above n
 }
 ```
 
-Every field here corresponds directly to a table or config already defined above (`SpatialNode` config, Soul files, `agent_relationships`, `ledger`, constitution text, `ToolDefinition` registry, `proposals`/governance settings). A scenario loader is primarily an ingestion step for existing systems, not a new subsystem — which is the point of designing it in from the start.
+Every field here corresponds directly to a table or config already defined above (`SpatialNode` config, Soul files, `agent_relationships`, `ledger`, constitution text, `ToolDefinition` registry, `proposals`/governance settings). A scenario loader is primarily an ingestion and aggregation step for existing systems, which is the point of designing it in from the start.
 
 ## 11. Inference Gateway & Multi-Model Architecture
 
 ```rust
 pub struct InferenceRequest {
     pub agent_id: Uuid,
-    pub model_id: String,          // e.g. "llama-3.3-70b", "qwen2.5-32b" — per-agent assignment
+    pub model_id: String,          // e.g. "gemma4-31b", "qwen3.8-27b" — per-agent assignment
     pub module: PianoModule,       // which module is calling, for routing and logging
     pub prompt: String,
     pub grammar: Option<JsonSchema>,  // enforced at the sampler for structured/tool-call outputs
