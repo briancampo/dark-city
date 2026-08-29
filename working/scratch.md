@@ -38,9 +38,67 @@ This isn't as much about trying to observe governance as the Emergence paper sug
 Feedback from the document reviews:
 
 - In the documents the team composition seems very functionally aligned and not necessarily skill defined. for isntance we have the world designer doing Bevy development work. Is that the intended outcome? I do feel like we need to have some technical alignment. One thing I suggest is a a Tech Lead, to do code/PR reviews and maintain the overall technical direction. I have not run a team with this composition so I will have to defer to your intent.
-- In the Design Doc I see quite a bit of description about smallville and Project Sid's PIANO, but I don't see much about how we will integrate the unique functions of Emergence World with the spatial exeection, tools, and organized governance. I don't want to go overboard on the other functions Emergence world did for the governance but there are good additions to consider. 
-- I don't see much on the newspaper in the design doc.  that is an important part of the project. 
+- In the Design Doc I see quite a bit of description about smallville and Project Sid's PIANO, but I don't see much about how we will integrate the unique functions of Emergence World with the spatial exeection, tools, and organized governance. I don't want to go overboard on the other functions Emergence world did for the governance but there are good additions to consider.
+- I don't see much on the newspaper in the design doc. that is an important part of the project.
 
 ====
 
-The current plan is to use google antigravity as the development environment.  
+Great feedback and assessment.
+One thing I haven't done yet is consider the inclusion of an additional team member (tech-lead). Nobody currently has cross-cutting authority to ask "is this the right abstraction," "does this actually honor config-over-constants or is it just claiming to," or "is this consistent with how the rest of the codebase does this" — across all five specialists' code. That's a real gap, and it's the kind of thing that tends to surface expensively around Phase 2–3, once there's enough surface area for architectural drift to hide in.
+
+My recommendation, split authority the way QA's cross-cutting test power is already split from implementation ownership —
+
+Steward stays process-authority. Dispatch, DoD gate, decision log admin, RFC process admin.
+Tech Lead becomes technical-authority. Owns no directory (like the Steward), but has read/comment authority across all of /src, is a required second sign-off on every PR alongside the Steward's DoD gate, and — this is the part I'd flag most — is probably the better fit than the Steward for Charter §3.2's "first point of escalation on a genuine ambiguity." Judging whether something's a small implementation detail or a real architecture fork is a technical call, not a process one. The Steward would keep first-point-of-contact for scope/sequencing ambiguity ("is this ticket sized right," "does this depend on unmerged work"); Tech Lead would own technical/architecture ambiguity.
+
+That's a clean split with no duplicated authority, but it does mean patching Charter §3.1, §3.2, §5, and §7, plus AGENTS.md's role table — all documents currently marked "Done."
+
+I'd like to get your thoughts on this and if you agree let's put that in place before we begin Epic 1.0.
+
+A few additional points:
+
+- I updated the agent directory path to be roles instead of agents and fixed the links in the design-doc.md file.
+- I'd like to better understand the plan for the different crates proposed.
+
+===
+
+Currently:
+complete on the review of AG updates and need to integrate the claude updates.
+reviewing backlog with mission brief update to include Docker as a starting story on deck.
+
+#### CL:
+
+I don't see anything about a user interface to follow the world visually and see the world play out similar to what Smallville and A16Z's AI Town do. Is this considered in the current project scope?
+
+- It is not clear to me how the world client (bevy) is retrieving all of the necessary information it needs. I want to make sure that the backend and the world client are separable so that we can run the backend in our containerized infrastructure with the client being able to be run on a different machine (likely a workstation). At some point in the future I would ideally like to be able to run multiple world clients against our backend so that we can have many simulations supported by the backend.
+  - I am not sure if our current design supports either the separable world client and backend, and then further if our backend is designed to be able to support multiple world clients.
+
+===
+
+This is great feedback and highlights a bit of a misunderstanding on my part.  I misunderstood that Bevy was being used for handling of the core agent functions and not just being used as the world client (viewer).  I may have miscommunicated during the initial phases of the project what my intent was. That could have led us to where we are now.  
+
+The second part about multiple clients was more trying to see if there was the ability to have a sort of tenant approach to things and how we might abstract multiple concurrent worlds.  This isn't trying to replicate the same world in multiple clients but trying to replicate multiple worlds each with their own client.  Hope this makes sense and happy to discuss further. 
+
+Given your knock on issues point I agree it may be that we need to think through a series of documentation changes to resolve the group of things.  This is much better done now while we are very early in the project rather than later when it will be much harder. 
+
+Your suggestion for underlying fix of moving things to the backend seems to align with the conceptual idea was thinking of. If ECS is still the right idea that is fine. We can still run ECS and Bevy headlessly (there is also bevy_ecs for headless running as well) if that is the right approach on the backend and have a world client for the front end that is a different Bevy instance.  
+
+====
+
+Plan looks good with a few comments at the end.  As we are working through this I also decided to change a few things.  Please review the below and make sure that the changes are reflected in both scripts so that they will operate correctly. 
+
+I moved this out of my personal github (briancampo) and into the organization's github (Mindstar Studion) account now that we are ready to start. 
+Repo: https://github.com/Mindstar-Studio/dark-city 
+project: https://github.com/orgs/Mindstar-Studio/projects/2
+
+I also created an issue for the epic as I want to be able to track epic to story to task.  Not all stories will need multiple tasks but I want to have the ability to break down large stories into multiple tasks and continue the parent child relationship.  
+I like the structure you have for the story issues. The epic I created only has the backlog table as the description so if you have a better structure/template for our epics you can modify that to improve it. 
+
+Feedback items: 
+- Create Story or create epic: I am not sure that the backlog document captures all of the detail we need for a story and especially if the story is further broken down into multiple tasks that we will have enough information in the backlog document to automatically create a well defined and comprehensive issue description. I could be off on this but would like you to review. The idea of using an issue body file that the agent constructs seemed to make sense since there was additional info needed but will defer to your insight. 
+
+#### Feature Discussion:
+
+- It seems like currently we have tool calls defined statically. I thought I remembered some discussion around having tool calls being able to be expanded in the future. Is this the case and have we thought through how that would be implemented in the project?
+- I think we should capture a bit more info about the citizen's emotional state and views on things. This is extremely interesting for our ability to have these citizens inhabiting a world that feels alive for players. It could also allow for us to seed conditions for a citizen and enhance the depth of their role in the world to improve the player's experience.
+

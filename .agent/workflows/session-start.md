@@ -25,7 +25,7 @@ Search `/decisions/` for anything already resolved in this ticket's area. If a p
 
 ## 5. Check the Codebase's Current State
 
-Pull the latest state of your directory. Run `cargo check`, `cargo clippy`, and `cargo nextest run` (or collectively `cargo xtask check`). If the baseline isn't green, that's a blocker to investigate and raise before starting new work — not something to build on top of or work around quietly. Read the existing code relevant to your ticket before writing anything new; don't assume you know its current shape from a previous session.
+Verify you are in your assigned worktree. Run `scripts/gh-task-ops.sh check` (or `cargo xtask check`, which executes `cargo fmt --check`, `cargo clippy --all-targets -- -D warnings`, and `cargo nextest run`). If the baseline isn't green, that's a blocker to investigate and raise before starting new work — not something to build on top of or work around quietly. Read the existing code relevant to your ticket before writing anything new; don't assume you know its current shape from a previous session.
 
 ## 6. Check Open Cross-Boundary Proposals
 
@@ -43,13 +43,13 @@ Apply the Team Charter §4 engineering principles as you go — tests alongside 
 
 ## 9. Self-Review Against the Definition of Done
 
-Before opening a PR, check it against Team Charter §7 in full: tests, clean clippy, tool-schema contract review if applicable, no dead code, documented interfaces, a decision log entry if warranted, and a reference to the ticket ID.
+Before opening a PR, check it against Team Charter §7 in full: tests, clean clippy, tool-schema contract review if applicable, no dead code, documented interfaces, a decision log entry if warranted, and a reference to the ticket ID. Run `scripts/gh-task-ops.sh check` to confirm machine gates are green.
 
 ## 10. Log and Hand Off
 
 - Write any decision log entries the session's work requires (§6 of the Charter) — before opening the PR, not after.
-- Write a short handoff note in the PR description: what's done, what's still open, anything the next session on this ticket needs to know that isn't already in the decision log.
-- Open the PR, reference the ticket ID, and request Steward review.
+- Open the PR using `scripts/gh-task-ops.sh pr-create`, which automatically populates the Definition of Done checklist and session handoff section in the PR description.
+- Reference the ticket ID, and request Steward & Tech Lead review.
 
 ---
 

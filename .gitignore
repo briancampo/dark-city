@@ -1,0 +1,29 @@
+bin/
+target/
+.worktrees/
+keys/
+.secrets
+excluded/excl.md
+*.ron.bak
+
+# Previous Documentation
+working/previous-sprint/
+
+# Environments
+.env
+.env.staging
+.env.test
+!.env.staging.example
+.agent/config.env
+!.agent/config.env.template
+
+# Godot Files
+client/.godot/**
+!client/.godot/global_script_class_cache.cfg
+client/.nomedia
+client/build/web
+client/config/config.production.cfg
+
+# Web export
+backend/static/web-client/
+client-bevy/dist/

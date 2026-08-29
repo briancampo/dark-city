@@ -1,0 +1,15 @@
+[package]
+name = "dark_city_instrumentation"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+description = "AWI metrics calculations, event sink, and audit pipelines for Dark City."
+
+[dependencies]
+dark_city_core.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+chrono.workspace = true
+thiserror.workspace = true
+tracing.workspace = true
