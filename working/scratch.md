@@ -75,33 +75,62 @@ I don't see anything about a user interface to follow the world visually and see
 
 ===
 
-This is great feedback and highlights a bit of a misunderstanding on my part.  I misunderstood that Bevy was being used for handling of the core agent functions and not just being used as the world client (viewer).  I may have miscommunicated during the initial phases of the project what my intent was. That could have led us to where we are now.  
+This is great feedback and highlights a bit of a misunderstanding on my part. I misunderstood that Bevy was being used for handling of the core agent functions and not just being used as the world client (viewer). I may have miscommunicated during the initial phases of the project what my intent was. That could have led us to where we are now.
 
-The second part about multiple clients was more trying to see if there was the ability to have a sort of tenant approach to things and how we might abstract multiple concurrent worlds.  This isn't trying to replicate the same world in multiple clients but trying to replicate multiple worlds each with their own client.  Hope this makes sense and happy to discuss further. 
+The second part about multiple clients was more trying to see if there was the ability to have a sort of tenant approach to things and how we might abstract multiple concurrent worlds. This isn't trying to replicate the same world in multiple clients but trying to replicate multiple worlds each with their own client. Hope this makes sense and happy to discuss further.
 
-Given your knock on issues point I agree it may be that we need to think through a series of documentation changes to resolve the group of things.  This is much better done now while we are very early in the project rather than later when it will be much harder. 
+Given your knock on issues point I agree it may be that we need to think through a series of documentation changes to resolve the group of things. This is much better done now while we are very early in the project rather than later when it will be much harder.
 
-Your suggestion for underlying fix of moving things to the backend seems to align with the conceptual idea was thinking of. If ECS is still the right idea that is fine. We can still run ECS and Bevy headlessly (there is also bevy_ecs for headless running as well) if that is the right approach on the backend and have a world client for the front end that is a different Bevy instance.  
+Your suggestion for underlying fix of moving things to the backend seems to align with the conceptual idea was thinking of. If ECS is still the right idea that is fine. We can still run ECS and Bevy headlessly (there is also bevy_ecs for headless running as well) if that is the right approach on the backend and have a world client for the front end that is a different Bevy instance.
 
 ====
 
-Plan looks good with a few comments at the end.  As we are working through this I also decided to change a few things.  Please review the below and make sure that the changes are reflected in both scripts so that they will operate correctly. 
+Plan looks good with a few comments at the end. As we are working through this I also decided to change a few things. Please review the below and make sure that the changes are reflected in both scripts so that they will operate correctly.
 
-I moved this out of my personal github (briancampo) and into the organization's github (Mindstar Studion) account now that we are ready to start. 
-Repo: https://github.com/Mindstar-Studio/dark-city 
+I moved this out of my personal github (briancampo) and into the organization's github (Mindstar Studion) account now that we are ready to start.
+Repo: https://github.com/Mindstar-Studio/dark-city
 project: https://github.com/orgs/Mindstar-Studio/projects/2
 
-I also created an issue for the epic as I want to be able to track epic to story to task.  Not all stories will need multiple tasks but I want to have the ability to break down large stories into multiple tasks and continue the parent child relationship.  
-I like the structure you have for the story issues. The epic I created only has the backlog table as the description so if you have a better structure/template for our epics you can modify that to improve it. 
+I also created an issue for the epic as I want to be able to track epic to story to task. Not all stories will need multiple tasks but I want to have the ability to break down large stories into multiple tasks and continue the parent child relationship.  
+I like the structure you have for the story issues. The epic I created only has the backlog table as the description so if you have a better structure/template for our epics you can modify that to improve it.
 
-Feedback items: 
-- Create Story or create epic: I am not sure that the backlog document captures all of the detail we need for a story and especially if the story is further broken down into multiple tasks that we will have enough information in the backlog document to automatically create a well defined and comprehensive issue description. I could be off on this but would like you to review. The idea of using an issue body file that the agent constructs seemed to make sense since there was additional info needed but will defer to your insight. 
+Feedback items:
+
+- Create Story or create epic: I am not sure that the backlog document captures all of the detail we need for a story and especially if the story is further broken down into multiple tasks that we will have enough information in the backlog document to automatically create a well defined and comprehensive issue description. I could be off on this but would like you to review. The idea of using an issue body file that the agent constructs seemed to make sense since there was additional info needed but will defer to your insight.
 
 ====
 
-When the blueprint says that each world instance runs its own headless ECS App I am not sure what that means. How will the backend run multiple instances within the single backend server? Is this just multiple Bevy Schedules, or some other parallelization structure? 
+When the blueprint says that each world instance runs its own headless ECS App I am not sure what that means. How will the backend run multiple instances within the single backend server? Is this just multiple Bevy Schedules, or some other parallelization structure?
 
 I see how we are capturing citizen interactions and activities, but I don't see how we are capturing world events. Is it intended that the only way to capture that something has happened in the world is that citizens would talk about it?
+
+====
+
+General insights:
+I wonder if this is better considered as observations so an not to conflict with or overlap with the concept of Perception in the other mechanisms.  
+The project has not progressed past what is already documented in the project artifacts beyond the simple completion of Epic 1.0 and Story 1.1.0 Containerization. So we have a very clean slate to work from as we decide the best path forward.
+
+Producer: I would like to consider both of the described options but also consider citizen generated events as well where a citizens actions might queue a new world event.
+
+Responses to your questions:
+
+- For severe world events, I would say that is not where we will start but may be something we consider further in the future.
+- M10 scanning raw perceived memories: I think that is something i would like to better understand how the impact of. If i understand correctly the raw sourced event is just an observation and when it surfaces is when it would become citizen interpreted or related. If that is correct i think it would be that we scan the citizen's later speech since that is when it becomes "theirs". I don't think M10 should scan raw event info, only the citizen's conception, interpretation, or discussion of it.
+
+A couple of additional questions:
+
+- I just want to make sure that a perceived event that is put directly into memory can immediately trigger an action, correct? I want to make sure that is a citizen perceives (or observes) a fire in their kitchen the mechanism would allow them to react to it as they observe it, not at some later point indicating they didn't take an action.
+- Since we are updating the scenario package we should have a starting time for the scenario which would allow the world to have an time anchor but also allow the setting of scripted events to a world clock time instead of just a trigger time that is based on elapsed time.
+
+====
+
+Great work. I have reviewed this latest version and think it is ready to be integrated into the project documents. Please proceed with updating the rest of the documentation to integrate this new concept.  Once you have made the updates I will take your updated documents and move them over to the project repository so the team can get started on this. 
+
+A couple of thoughts while you are doing the integrations: 
+- To your question of population scale events. I don't think that is something we need to worry about now. 
+- I agree with your approach to keep urgency path in the fast loop allowing it to leverage a flag or category (salience) to determine if it needs to go straight to the Cognitive Controller.  I think all three producers will have the ability to predefine the urgency at event creation time so we don't need to tie up the Controller to make that determination. 
+
+
 
 #### Feature Discussion:
 

@@ -34,7 +34,7 @@ Every development task and agent session operates in an isolated git worktree cr
 - **Worktree Location Standard:** `/home/brian/dev/ai/worktrees/dark-city/<issue_id>-<task_slug>/`
 - **Branch Naming Standard:** `<issue_id>-<task_slug>`
 - **STRICT WORKSPACE BOUNDARY:** You MUST execute all commands and edits strictly inside your assigned worktree directory. Never perform file operations, builds, or git commits outside your assigned worktree path.
-- **Relative Markdown Links:** All documentation and markdown references in the repository MUST use relative paths (e.g. `docs/design-doc.md`, `../references/project-sid.md`) so links resolve properly across any worktree and GitHub UI without depending on root filesystem absolute paths.
+- **Relative Markdown Links:** All documentation and markdown references in the repository MUST use relative paths (e.g. `docs/design-doc.md`, `../references/project-sid.txt`) so links resolve properly across any worktree and GitHub UI without depending on root filesystem absolute paths.
 
 ## Who You Are
 
