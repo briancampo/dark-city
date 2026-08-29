@@ -14,7 +14,7 @@ working/previous-sprint/
 .env.staging
 .env.test
 !.env.staging.example
-.agent/config.env
+!.agent/config.env
 !.agent/config.env.template
 
 # Godot Files

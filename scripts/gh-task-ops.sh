@@ -68,9 +68,11 @@ DEFAULT_BASE_BRANCH="${DEFAULT_BASE_BRANCH:-main}"
 get_worktree_base_dir() {
     if [ -n "$WORKTREES_DIR" ]; then
         WORKTREE_BASE="$WORKTREES_DIR"
-    elif [ -d "$(dirname "$PROJECT_ROOT")/worktrees/$(basename "$PROJECT_ROOT")" ]; then
-        WORKTREE_BASE="$(dirname "$PROJECT_ROOT")/worktrees/$(basename "$PROJECT_ROOT")"
+    elif [ -d "$(dirname "$PROJECT_ROOT")/worktrees/${REPO_NAME:-dark-city}" ]; then
+        WORKTREE_BASE="$(dirname "$PROJECT_ROOT")/worktrees/${REPO_NAME:-dark-city}"
     elif [ -d "$(dirname "$PROJECT_ROOT")/worktrees" ]; then
+        WORKTREE_BASE="$(dirname "$PROJECT_ROOT")/worktrees/${REPO_NAME:-dark-city}"
+    elif [ -d "$(dirname "$PROJECT_ROOT")/worktrees/$(basename "$PROJECT_ROOT")" ]; then
         WORKTREE_BASE="$(dirname "$PROJECT_ROOT")/worktrees/$(basename "$PROJECT_ROOT")"
     else
         WORKTREE_BASE="$PROJECT_ROOT/.worktrees"
