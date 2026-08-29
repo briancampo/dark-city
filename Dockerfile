@@ -3,7 +3,7 @@
 # ==============================================================================
 
 # --- Stage 1: Build & Compilation ---
-FROM rust:1-slim-bookworm AS builder
+FROM rust:1-slim-trixie AS builder
 
 WORKDIR /app
 
@@ -23,7 +23,7 @@ COPY crates/ ./crates/
 RUN cargo build --release -p dark_city_server
 
 # --- Stage 2: Minimal Production Runtime ---
-FROM debian:bookworm-slim AS runtime
+FROM debian:bullseye-slim AS runtime
 
 # Install minimal runtime dependencies (CA certificates, OpenSSL, curl for health checks)
 RUN apt-get update && apt-get install -y --no-install-recommends \

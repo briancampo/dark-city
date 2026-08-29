@@ -1,4 +1,7 @@
 //! Main entry point for the Dark City backend server.
+//! This is only a stub to allow for the docker container to assess health
+//! This stub should be replaced during actual development cycle. 
+
 
 use dark_city_server::{get_health_status, ServerConfig};
 use tracing::info;
