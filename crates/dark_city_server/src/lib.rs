@@ -1,7 +1,7 @@
 //! `dark_city_server` provides the backend runtime, API handlers,
 //! and coordination logic for the Dark City simulation.
 //! This is only a stub to allow for the docker container to assess health
-//! This stub should be replaced during actual development cycle. 
+//! This stub should be replaced during actual development cycle.
 
 use dark_city_core::AgentId;
 use serde::{Deserialize, Serialize};
