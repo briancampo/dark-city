@@ -97,6 +97,12 @@ I like the structure you have for the story issues. The epic I created only has 
 Feedback items: 
 - Create Story or create epic: I am not sure that the backlog document captures all of the detail we need for a story and especially if the story is further broken down into multiple tasks that we will have enough information in the backlog document to automatically create a well defined and comprehensive issue description. I could be off on this but would like you to review. The idea of using an issue body file that the agent constructs seemed to make sense since there was additional info needed but will defer to your insight. 
 
+====
+
+When the blueprint says that each world instance runs its own headless ECS App I am not sure what that means. How will the backend run multiple instances within the single backend server? Is this just multiple Bevy Schedules, or some other parallelization structure? 
+
+I see how we are capturing citizen interactions and activities, but I don't see how we are capturing world events. Is it intended that the only way to capture that something has happened in the world is that citizens would talk about it?
+
 #### Feature Discussion:
 
 - It seems like currently we have tool calls defined statically. I thought I remembered some discussion around having tool calls being able to be expanded in the future. Is this the case and have we thought through how that would be implemented in the project?

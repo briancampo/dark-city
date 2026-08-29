@@ -2,9 +2,11 @@
 
 This directory contains dated, numbered architectural decision records (ADRs) for the Dark City project, maintained by the Steward per Team Charter §6.
 
-| ID                                        | Title                                              | Date       | Role             | Status   |
-| :---------------------------------------- | :------------------------------------------------- | :--------- | :--------------- | :------- |
-| [0001](0001-workspace-crate-structure.md) | Cargo Workspace Crate Decomposition & Role Mapping | 2026-08-27 | System Architect | Accepted |
+| ID                                              | Title                                                | Date       | Role             | Status   |
+| :---------------------------------------------- | :--------------------------------------------------- | :--------- | :--------------- | :------- |
+| [0001](0001-workspace-crate-structure.md)       | Cargo Workspace Crate Decomposition & Role Mapping   | 2026-08-27 | System Architect | Accepted |
+| [0002](0002-server-authoritative-simulation.md) | Server-Authoritative Simulation & Thin Viewer Client | 2026-08-27 | System Architect | Accepted |
+| [0003](0003-multi-tenant-world-instances.md)    | Multi-Tenant World Instances                         | 2026-08-28 | System Architect | Accepted |
 
 ### Guidelines
 

@@ -10,6 +10,7 @@ To prevent confusion between the simulation and the development team, strictly a
 - **Agent / Developer Agent:** A specialist AI coding agent on the Dark Factory development team (Steward, Tech Lead, System Architect, Local Inference Specialist, World Designer, Character Sculptor, QA/Instrumentation).
 - **Dark City:** The simulated world, runtime environment, and game systems.
 - **Dark Factory:** The development team, engineering processes, and repository automation.
+- **Viewer Client:** The thin, stateless `dark_city_client` application used to observe a running Dark City world. It renders what the backend broadcasts; it holds no simulation state and makes no simulation decisions (see [Decision 0002](decisions/0002-server-authoritative-simulation.md)).
 
 ## Read in This Order
 
@@ -23,7 +24,7 @@ You don't need to re-read all four every session — Session Start Workflow tell
 
 ## What You're Building, in One Paragraph
 
-Dark City is a platform for populating constructed worlds with AI **citizens** and observing how they organize, interact, and change those worlds — built on a full PIANO cognitive architecture (concurrent specialized modules bottlenecked through a single Cognitive Controller for coherence), a three-tier memory system, a fully decentralized governance model, and instrumentation (AWI) for understanding what a given world produced. It's built in Rust (Axum backend, Bevy 0.19 client, Postgres/pgvector), designed from the start to eventually support sculptable worlds — different maps, citizen rosters, and starting scenarios loaded as configuration rather than hardcoded.
+Dark City is a platform for populating constructed worlds with AI **citizens** and observing how they organize, interact, and change those worlds — built on a full PIANO cognitive architecture (concurrent specialized modules bottlenecked through a single Cognitive Controller for coherence), a three-tier memory system, a fully decentralized governance model, and instrumentation (AWI) for understanding what a given world produced. The simulation itself is **server-authoritative**: it runs headlessly and continuously inside the Axum/Bevy-ECS backend whether or not anyone is watching, and a thin, stateless Bevy viewer client connects in over WebSocket purely to render what's happening — see [Decision 0002](decisions/0002-server-authoritative-simulation.md). One backend deployment can also host several fully isolated **world instances** at once ([Decision 0003](decisions/0003-multi-tenant-world-instances.md)). It's built in Rust (Axum + headless Bevy ECS backend, separate Bevy 0.19 viewer client, Postgres/pgvector), designed from the start to eventually support sculptable worlds — different maps, citizen rosters, and starting scenarios loaded as configuration rather than hardcoded.
 
 ## Git Worktree & Session Isolation Rules
 
@@ -37,22 +38,22 @@ Every development task and agent session operates in an isolated git worktree cr
 
 ## Who You Are
 
-| Role                       | Owns                                            | Blueprint sections       |
-| -------------------------- | ----------------------------------------------- | ------------------------ |
-| Steward                    | Backlog dispatch, decision log, PR process gate | —                        |
-| Tech Lead                  | Technical oversight, architecture, PR tech gate | All `/crates/` & `/src/` |
-| System Architect           | `crates/dark_city_server/`, `migrations/`       | §2, §6, §7, §12          |
-| Local Inference Specialist | `crates/dark_city_inference/`, `grammars/`      | §3.3, §11                |
-| World Designer             | `crates/dark_city_world/`, `assets/maps/`       | §5, §8                   |
-| Character Sculptor         | `crates/dark_city_cognitive/`, `assets/souls/`  | §4                       |
-| QA/Instrumentation         | `crates/dark_city_instrumentation/`, `tests/`   | §9                       |
+| Role                       | Owns                                                                                     | Blueprint sections           |
+| -------------------------- | ---------------------------------------------------------------------------------------- | ---------------------------- |
+| Steward                    | Backlog dispatch, decision log, PR process gate                                          | —                            |
+| Tech Lead                  | Technical oversight, architecture, PR tech gate                                          | All `/crates/` & `/src/`     |
+| System Architect           | `crates/dark_city_server/`, `migrations/`                                                | §2, §3.3, §6, §7, §10.2, §12 |
+| Local Inference Specialist | `crates/dark_city_inference/`, `grammars/`                                               | §3.3, §11                    |
+| World Designer             | `crates/dark_city_world/` (library), `crates/dark_city_client/` (viewer), `assets/maps/` | §3.4, §5, §8.3               |
+| Character Sculptor         | `crates/dark_city_cognitive/`, `assets/souls/`                                           | §4                           |
+| QA/Instrumentation         | `crates/dark_city_instrumentation/`, `tests/`                                            | §9                           |
 
 Full detail, including QA and Tech Lead cross-cutting authorities and how workspace `Cargo.toml` changes are handled, is in [Team Charter §3](docs/project-charter.md#3-team-structure).
 
 ## How We Work, Condensed
 
 - **Isolated Worktree:** Verify your current working directory matches your assigned worktree before making any changes.
-- **Dual-Gate PR Approval:** Every PR requires sign-off from both the Steward (process & verification) and the Tech Lead (architectural soundness & contracts) per [Team Charter §7](docs/project-charter.md#7-definition-of-done-pr-gate).
+- **Dual-Gate PR Approval:** Every PR requires sign-off from both the Steward (process & verification) and the Tech Lead (architectural soundness & contracts) per [Team Charter §7](docs/project-charter.md#7-definition-of-done-pr-dual-gate).
 - **Clean CI:** No merged code without passing tests (`cargo nextest run`) and clean `cargo clippy --all-targets -- -D warnings`, `cargo fmt --check`, and `cargo xtask check`.
 - **Atomic PRs:** Decompose large tickets rather than opening monolithic PRs.
 - **Public Interface Documentation:** Public functions and structs get doc comments explaining _why_ they exist.
@@ -102,26 +103,29 @@ cargo fmt --check
 cargo xtask check
 ```
 
+All commands must be clean before you open a PR.
+
 ## Where Things Live
 
 ```
 crates/dark_city_core/            Shared domain types, IDs, error enums (Tech Lead / Shared)
-crates/dark_city_server/          Axum backend & DB logic (System Architect)
+crates/dark_city_server/          Axum backend, headless simulation ECS App & tick loop, World Session Manager, DB logic (System Architect)
 migrations/                       Postgres SQL migrations (System Architect)
 crates/dark_city_inference/       Inference client & schema routing (Local Inference Specialist)
 grammars/                         BNF / JSON grammars (Local Inference Specialist)
-crates/dark_city_world/           Spatial ECS & tool gating (World Designer)
+crates/dark_city_world/           Spatial hierarchy & tool-gating LIBRARY, linked into the backend (World Designer)
+crates/dark_city_client/          Thin Bevy viewer client — renderer only, no simulation state (World Designer)
 assets/maps/                      Map configs (World Designer)
-crates/dark_city_cognitive/       PIANO blackboard & controller (Character Sculptor)
+crates/dark_city_cognitive/       PIANO blackboard & controller, registered into the backend's headless App (Character Sculptor)
 assets/souls/                     Soul Markdown files (Character Sculptor)
 crates/dark_city_instrumentation/ AWI metrics pipeline (QA/Instrumentation)
 tests/                            Integration tests (QA/Instrumentation cross-cutting)
 xtask/                            Repository CI runner (System Architect / QA)
-scripts/                          Task & Issue automation utilities (gh-task-ops, gh-issue-ops)
 decisions/                        Architecture decision records (Steward maintains)
 proposals/                        Cross-boundary RFCs (Tech Lead & Steward arbitrate)
-working/briefs/                   Scaffolded mission briefs for dispatchable stories
 ```
+
+`dark_city_world` and `dark_city_client` used to be one conflated concept (a single Bevy client). See [Decision 0002](decisions/0002-server-authoritative-simulation.md) for why they split: the simulation itself — including everything spatial and tool-gating — runs headlessly inside `dark_city_server`; `dark_city_client` is a separate, genuinely thin viewer with no simulation logic at all.
 
 ## If You're Blocked
 

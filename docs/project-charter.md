@@ -1,6 +1,8 @@
 # Dark Factory: Team Charter
 
-**Version:** v1.3
+**Version:** v1.4
+
+**v1.4 note:** Role/ownership table (§3.1) revised per [Decision 0002](../decisions/0002-server-authoritative-simulation.md) — `dark_city_world` is now a library composed into the backend's headless simulation, and a new `dark_city_client` crate holds the (now genuinely thin) viewer. System Architect's scope grows to include the headless ECS App and the World Session Manager (multi-world orchestration, [Decision 0003](../decisions/0003-multi-tenant-world-instances.md)).
 
 ## 1. Purpose of This Document
 
@@ -25,15 +27,17 @@ There's a fitting parallel here: Dark City's own citizens rely on a Cognitive Co
 
 ### 3.1 Roles and Ownership
 
-| Role                           | Owns (directories)                                                                            | World Blueprint sections   | Responsibility                                                                                                |
-| ------------------------------ | --------------------------------------------------------------------------------------------- | -------------------------- | ------------------------------------------------------------------------------------------------------------- |
-| **Steward**                    | _(coordinates; owns no code directly)_                                                        | —                          | Ticket dispatch, decision log maintenance, PR gating (process), cross-boundary arbitration                    |
-| **Tech Lead**                  | _(coordinates; owns no code directly; cross-cutting review authority across all crates/code)_ | — _(all, for review)_      | PR gating (technical soundness), technical/architecture ambiguity escalation, cross-boundary technical review |
-| **System Architect**           | `crates/dark_city_server/`, `migrations/`                                                     | §2, §6, §7, §12            | Axum backend, DB schema & migrations, WebSocket/API surface, governance & ledger backend logic                |
-| **Local Inference Specialist** | `crates/dark_city_inference/`, `grammars/`                                                    | §3.3 (inference side), §11 | Inference gateway integration, grammar/schema enforcement, multi-model routing                                |
-| **World Designer**             | `crates/dark_city_world/`, `assets/maps/`                                                     | §5, §8                     | Bevy ECS, spatial hierarchy, tool-gating implementation, Narrator/bulletin rendering                          |
-| **Character Sculptor**         | `crates/dark_city_cognitive/`, `assets/souls/`                                                | §4                         | Soul file format & parsing, memory/reflection/planning module logic, persona stability                        |
-| **QA/Instrumentation Agent**   | `crates/dark_city_instrumentation/`, `tests/`                                                 | §9                         | AWI metrics, M10 pipeline, test coverage across all directories                                               |
+| Role                           | Owns (directories)                                                                        | World Blueprint sections    | Responsibility                                                                                                                                                                                    |
+| ------------------------------- | --------------------------------------------------------------------------------------------- | ---------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Steward**                    | _(coordinates; owns no code directly)_                                                      | —                             | Ticket dispatch, decision log maintenance, PR gating (process), cross-boundary arbitration                                                                                                        |
+| **Tech Lead**                  | _(coordinates; owns no code directly; cross-cutting review authority across all crates/code)_ | — _(all, for review)_        | PR gating (technical soundness), technical/architecture ambiguity escalation, cross-boundary technical review                                                                                     |
+| **System Architect**           | `crates/dark_city_server/`, `migrations/`                                                   | §2, §3.3, §6, §7, §10.2, §12 | Axum backend, **headless simulation ECS App composition & tick loop**, World Session Manager (multi-world lifecycle), DB schema & migrations, WebSocket/API surface, governance & ledger backend logic |
+| **Local Inference Specialist** | `crates/dark_city_inference/`, `grammars/`                                                  | §3.3 (inference side), §11   | Inference gateway integration, grammar/schema enforcement, multi-model routing                                                                                                                    |
+| **World Designer**             | `crates/dark_city_world/` (library), `crates/dark_city_client/` (viewer), `assets/maps/`    | §3.4, §5, §8.3               | Spatial hierarchy & tool-gating logic as a library composed into the backend's headless App; the thin viewer client (rendering, WSS subscription, bulletin display)                              |
+| **Character Sculptor**         | `crates/dark_city_cognitive/`, `assets/souls/`                                              | §4                            | Soul file format & parsing, memory/reflection/planning module logic (registered as systems into the backend's headless App), persona stability                                                    |
+| **QA/Instrumentation Agent**   | `crates/dark_city_instrumentation/`, `tests/`                                               | §9                            | AWI metrics, M10 pipeline, test coverage across all directories                                                                                                                                   |
+
+**On `dark_city_world` and `dark_city_client` ([Decision 0002](../decisions/0002-server-authoritative-simulation.md)):** these were one conflated concept in early scoping — a single Bevy client assumed to hold both spatial/gating logic and rendering. They're now two crates, both World-Designer-owned, but with a real seam between them: `dark_city_world` is a library with no `main.rs` of its own, linked into `dark_city_server`'s headless App at world-instance startup; `dark_city_client` is the actual runnable, windowed application, and it contains no simulation logic — see World Blueprint §3.4.
 
 The **QA/Instrumentation** Agent has cross-cutting authority to _write tests_ anywhere in the codebase, but not to modify implementation code outside its own directory — a failing test in someone else's directory is reported, not silently fixed by rewriting their logic.
 
@@ -105,7 +109,7 @@ Before a PR merges, it needs sign-off from both the Steward (process gate) and t
 - [ ] Code strictly aligns with World Blueprint & Design Foundations specifications
 - [ ] Abstractions are sound (no speculative generality, no leaky cross-crate abstractions)
 - [ ] Cross-boundary contracts (tool schemas, bridge DTOs, database types) match exact specifications
-- [ ] Async/Bevy thread safety verified: no blocking calls on main ECS schedule
+- [ ] Async/Bevy thread safety verified: no blocking calls on the backend's headless ECS tick schedule, and no simulation state (`AgentState` or equivalent) held anywhere outside `dark_city_server` — including in `dark_city_client`, which must remain a thin renderer per [Decision 0002](../decisions/0002-server-authoritative-simulation.md)
 - [ ] Config-over-constants honored: dynamic parameters are loadable, not hardcoded into structs
 - [ ] Tool schemas, if touched, pass a type-and-effect contract review — argument shapes match `ToolDefinition` exactly
 - [ ] The implementation is consistent with existing patterns elsewhere in the codebase

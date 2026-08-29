@@ -1,6 +1,8 @@
 # Dark City: World Design Foundations
 
-### The Dark Factory Development Project — v1.0
+### The Dark Factory Development Project — v1.1
+
+**v1.1 note:** Incorporates [Decision 0002](../decisions/0002-server-authoritative-simulation.md) (the simulation runs server-side and headlessly; Bevy is the viewer, never the engine) and [Decision 0003](../decisions/0003-multi-tenant-world-instances.md) (isolated, multi-tenant world instances). Implementation detail for both lives in the World Blueprint (§2, §3, §10); this document only updates the framing they touch.
 
 ## 1. What We're Building
 
@@ -83,7 +85,7 @@ each term normalized to the [0, 1] range before summing (equal weighting to star
 
 ## 6. World & Tool Framework — Built for Future Sculptability
 
-Dark City's spatial world is a hierarchy (Town → Building → Room → Entity) implemented in Bevy's ECS. Agent tool access is layered:
+Dark City's spatial world is a hierarchy (Town → Building → Room → Entity) implemented in Bevy's ECS, running headlessly as the authoritative simulation inside the backend (Decision 0002) — the separate, windowed Bevy viewer used to actually watch a world play out holds none of this state itself; it only renders what the backend tells it (World Blueprint §2–§3). Agent tool access is layered:
 
 - **Core tools** — always available: navigation, memory operations, planning, basic communication.
 - **Complementary tools** — surfaced contextually when an agent's recent reasoning makes them relevant: richer social interaction, billboard posting, and similar.
@@ -134,20 +136,21 @@ The long-term goal is to be able to define a **scenario package**: a spatial lay
 
 Nothing about this requires new capability from the systems described in §4–§9 — it requires that the _data_ those systems consume (map layout, roster, starting state, tool catalog) be defined as loadable configuration rather than hardcoded values, which is the principle stated in §6.
 
+**Scenario vs. world (Decision 0003).** A scenario package is a reusable template; a **world** is a specific running instance created by loading one. The backend can host several worlds concurrently, each fully isolated — its own citizens, its own clock, its own governance and economy — with no interaction between them. This is deliberately schema-level tenancy, not a scenario-authoring feature: the full authoring UI for building and browsing many different scenario packages remains Phase 3+ scope as above, but the ability to run more than one world at once from a single deployment is cheap enough to build in from the start, and it directly serves the platform's own research goals — e.g., running the same scenario twice to see whether the same starting conditions produce the same or different outcomes. See World Blueprint §10 for the schema.
+
 ## 11. Inference & Multi-Model Architecture
 
 The inference gateway is designed to be model-agnostic from the start: any agent's reasoning loop can be backed by any model exposed through our local inference layer, and the gateway itself doesn't assume a single model backend. This is a deliberate architectural property, not a stretch goal reserved for a late phase — our local inference cluster (multiple DGX Spark boxes) is expected to serve multiple models concurrently, and there's no reason the plumbing that routes an agent's cognitive calls to an inference endpoint should assume otherwise, even while early phases run homogeneous single-model populations for simplicity while the rest of the platform is being proven out. Heterogeneous, mixed-model populations become a scenario configuration (§10) once we're ready to exercise them, not a separate system we build later.
 
 ## 12. Tech Stack
 
-The backend must be able to run in preconfigured containers that are self contained exposing the API that the Bevy world client can access.
-Rust (Axum for the backend, Bevy 0.19 for the world's spatial client), Postgres with pgvector for persistence. This is our own architectural choice — it reuses the game engine this project is a corollary to, and it supports the team's ongoing investment in Rust. It is not inherited from any of the source research; none of the systems in §3 use this stack.
+The backend must be able to run in a preconfigured container that is self-contained, exposing the API and WebSocket feed that a viewer client — running on a separate machine, with zero coupling to the backend's deployment — can connect to. Rust throughout: Axum for the backend, which also hosts the simulation itself as a headless Bevy ECS App (Decision 0002) rather than any transport-only role; a separate, windowed Bevy 0.19 application as the viewer client; Postgres with pgvector for persistence. This is our own architectural choice — it reuses the game engine this project is a corollary to, and it supports the team's ongoing investment in Rust. It is not inherited from any of the source research; none of the systems in §3 use this stack. Because the backend owns simulation truth and the viewer holds none, the two are cleanly separable by construction: the backend runs continuously in our containerized infrastructure whether or not a viewer is attached, and any number of viewer instances — on a workstation, watching one or several worlds (§10) — can connect and disconnect freely without affecting the simulation.
 
 ## 13. Phased Roadmap
 
 Each phase is scoped to be **runnable end-to-end** — something we can start, watch, measure, and learn from — before we build the next one. The loop is: build the phase, run it, observe it through the AWI metrics and direct log inspection, decide what to change, and let that inform both the current phase's refinement and the next phase's design. This is a continuous process, not a fixed spec executed once.
 
-**Phase 1 — Seed.** A small population (3–5 agents), a handful of locations, the full PIANO module set (§4) and three-tier memory (§5) running end to end, a small core tool catalog (no adaptive-access gating required yet). No governance system. World layout, roster, and starting state are already defined as loadable configuration (§6, §10) even though we've only authored one such configuration so far. _What we learn:_ whether the cognitive loop produces believable moment-to-moment behavior, and whether the Bevy/Axum concurrency bridge holds up.
+**Phase 1 — Seed.** A small population (3–5 agents), a handful of locations, the full PIANO module set (§4) and three-tier memory (§5) running end to end, a small core tool catalog (no adaptive-access gating required yet). No governance system. World layout, roster, and starting state are already defined as loadable configuration (§6, §10) even though we've only authored one such configuration so far. The server-authoritative headless simulation and thin viewer client split (Decision 0002), and the `world_id`-scoped schema (Decision 0003), are both foundational to Phase 1 rather than retrofitted later — Phase 1 still only populates a single world, but the seam that lets us run more than one is already in place. _What we learn:_ whether the cognitive loop produces believable moment-to-moment behavior, and whether the headless-backend/thin-client split holds up under real inference load.
 
 **Phase 2 — Society.** Scale toward ~10 agents. Add adaptive-access tool gating (§6), the decentralized Town Hall governance system (§7), and the Narrator/News Reporter as a system-triggered chronicle of events. Begin tracking M1, M2, M3, M9. _What we learn:_ whether a population self-organizes, what kind of governance (if any) emerges, and whether the safety stack's environment and population layers hold under real multi-agent pressure.
 
@@ -161,3 +164,6 @@ Each phase is scoped to be **runnable end-to-end** — something we can start, w
 - Initial Phase 1 tool catalog size and contents.
 - The concrete file/data format for a "scenario package" (§10) — deferred until Phase 3, but worth sketching earlier if it's cheap to do so.
 - Whether a heavier multi-namespace memory framework is worth revisiting if reflection quality plateaus at larger scale — not needed now, but not ruled out later.
+- A lightweight, browser-based spectator/observer view (comparable to Smallville's or AI Town's viewers) is not yet scoped as its own deliverable. Decision 0002's thin-client model makes this cheap to add later — it would be another stateless subscriber on the same `/ws/world/:world_id` feed the Bevy viewer already uses — but no ticket exists for it yet; worth raising with the Steward once Phase 1's `dark_city_client` is running, to decide whether it's a Phase 1/2 nice-to-have or stays deferred.
+- Whether an optional, configurable cross-world interaction mechanism (Decision 0003, Option 3) is ever worth building — deliberately left undesigned; revisit only if a concrete scenario need arises, not preemptively.
+- The render/tick cadence relationship between the backend's simulation tick and the viewer client's 60 FPS render loop (interpolation strategy for a viewer rendering between two received deltas) isn't yet specified — likely a Blueprint §3.4 addition once `dark_city_client` is actually being built.
