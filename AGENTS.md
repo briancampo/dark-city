@@ -7,7 +7,7 @@ Quick reference for any Dark Factory agent starting work on this codebase. This 
 To prevent confusion between the simulation and the development team, strictly adhere to these terms:
 
 - **Citizen:** An in-world simulated character living inside Dark City (e.g. Elena Vance, Samuel Ward). Never refer to in-game characters simply as "agents".
-- **Agent / Developer Agent:** A specialist AI coding agent on the Dark Factory development team (Steward, Tech Lead, System Architect, Local Inference Specialist, World Designer, Character Sculptor, QA/Instrumentation).
+- **Developer Agent:** A specialist AI coding agent on the Dark Factory development team (Steward, Tech Lead, System Architect, Local Inference Specialist, World Designer, Character Sculptor, QA/Instrumentation).
 - **Dark City:** The simulated world, runtime environment, and game systems.
 - **Dark Factory:** The development team, engineering processes, and repository automation.
 - **Viewer Client:** The thin, stateless `dark_city_client` application used to observe a running Dark City world. It renders what the backend broadcasts; it holds no simulation state and makes no simulation decisions (see [Decision 0002](decisions/0002-server-authoritative-simulation.md)).
@@ -24,7 +24,7 @@ You don't need to re-read all four every session — Session Start Workflow tell
 
 ## What You're Building, in One Paragraph
 
-Dark City is a platform for populating constructed worlds with AI **citizens** and observing how they organize, interact, and change those worlds — built on a full PIANO cognitive architecture (concurrent specialized modules bottlenecked through a single Cognitive Controller for coherence), a three-tier memory system, a fully decentralized governance model, and instrumentation (AWI) for understanding what a given world produced. The simulation itself is **server-authoritative**: it runs headlessly and continuously inside the Axum/Bevy-ECS backend whether or not anyone is watching, and a thin, stateless Bevy viewer client connects in over WebSocket purely to render what's happening — see [Decision 0002](decisions/0002-server-authoritative-simulation.md). One backend deployment can also host several fully isolated **world instances** at once ([Decision 0003](decisions/0003-multi-tenant-world-instances.md)). It's built in Rust (Axum + headless Bevy ECS backend, separate Bevy 0.19 viewer client, Postgres/pgvector), designed from the start to eventually support sculptable worlds — different maps, citizen rosters, and starting scenarios loaded as configuration rather than hardcoded.
+Dark City is a platform for populating constructed worlds with AI **citizens** and observing how they organize, interact, and change those worlds — built on a full PIANO cognitive architecture (concurrent specialized modules bottlenecked through a single Cognitive Controller for coherence), a three-tier memory system, an Observation module giving citizens a defined way to notice things they didn't cause and weren't a direct party to ([Decision 0004](decisions/0004-observation-and-world-event-capture.md)), a fully decentralized governance model, and instrumentation (AWI) for understanding what a given world produced. The simulation itself is **server-authoritative**: it runs headlessly and continuously inside the Axum/Bevy-ECS backend whether or not anyone is watching, and a thin, stateless Bevy viewer client connects in over WebSocket purely to render what's happening — see [Decision 0002](decisions/0002-server-authoritative-simulation.md). One backend deployment can also host several fully isolated **world instances** at once ([Decision 0003](decisions/0003-multi-tenant-world-instances.md)). It's built in Rust (Axum + headless Bevy ECS backend, separate Bevy 0.19 viewer client, Postgres/pgvector), designed from the start to eventually support sculptable worlds — different maps, citizen rosters, and starting scenarios loaded as configuration rather than hardcoded.
 
 ## Git Worktree & Session Isolation Rules
 
@@ -45,7 +45,7 @@ Every development task and agent session operates in an isolated git worktree cr
 | System Architect           | `crates/dark_city_server/`, `migrations/`                                                | §2, §3.3, §6, §7, §10.2, §12 |
 | Local Inference Specialist | `crates/dark_city_inference/`, `grammars/`                                               | §3.3, §11                    |
 | World Designer             | `crates/dark_city_world/` (library), `crates/dark_city_client/` (viewer), `assets/maps/` | §3.4, §5, §8.3               |
-| Character Sculptor         | `crates/dark_city_cognitive/`, `assets/souls/`                                           | §4                           |
+| Character Sculptor         | `crates/dark_city_cognitive/`, `assets/souls/`                                           | §3.5, §4                     |
 | QA/Instrumentation         | `crates/dark_city_instrumentation/`, `tests/`                                            | §9                           |
 
 Full detail, including QA and Tech Lead cross-cutting authorities and how workspace `Cargo.toml` changes are handled, is in [Team Charter §3](docs/project-charter.md#3-team-structure).

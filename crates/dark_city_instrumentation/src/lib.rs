@@ -6,7 +6,7 @@ use serde::{Deserialize, Serialize};
 /// Agent World Index (AWI) core metrics snapshot (Blueprint §9.2).
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Default)]
 pub struct AwiSnapshot {
-    /// M1: Population Health (active agents).
+    /// M1: Population Health (active citizens).
     pub population_health: u32,
     /// M2: Safety & Public Order (cumulative hard violations).
     pub safety_violations: u32,
@@ -16,8 +16,8 @@ pub struct AwiSnapshot {
     pub economic_gini: f32,
     /// M9: Constitutional Growth (passed rule changes).
     pub constitutional_rule_changes: u32,
-    /// M11: Tool Expansion (agent-authored tools).
-    pub agent_created_tools: u32,
+    /// M11: Tool Expansion (citizen-authored tools).
+    pub citizen_created_tools: u32,
 }
 
 impl AwiSnapshot {

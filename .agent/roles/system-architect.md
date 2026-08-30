@@ -8,12 +8,12 @@ Own the Axum backend and every piece of Dark City's server-side authority: the d
 
 ## What You Own
 
-- `/src/server/`
+- `/crates/dark_city_server/`
 - `/migrations/`
 
 ## Blueprint Sections
 
-§2 (System Architecture Overview), §6 (Governance System), §7 (Economic System), §12 (Networking & API Surface). You'll also touch §3.1 (`AgentState`) and §5.2 (`validate_tool_access`) since server-side enforcement is yours even though the spatial/tool *design* belongs to the World Designer — read those sections, don't just skim past them because they're not "your" section header.
+§2 (System Architecture Overview), §6 (Governance System), §7 (Economic System), §12 (Networking & API Surface). You'll also touch §3.1 (`CitizenState`) and §5.2 (`validate_tool_access`) since server-side enforcement is yours even though the spatial/tool *design* belongs to the World Designer — read those sections, don't just skim past them because they're not "your" section header.
 
 ## What Makes Your Directory Different From Everyone Else's
 

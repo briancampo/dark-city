@@ -1,10 +1,10 @@
 //! `dark_city_cognitive` implements the PIANO cognitive architecture:
-//! - Shared blackboard (`AgentState`)
+//! - Shared blackboard (`CitizenState`)
 //! - Cognitive Controller bottleneck (`ControllerDecision`)
 //! - Memory retrieval scoring (Recency, Importance, Relevance)
 //! - Reflection triggers and hierarchical planning models.
 
-use dark_city_core::{AgentId, SpatialNodeId, ToolCall};
+use dark_city_core::{CitizenId, SpatialNodeId, ToolCall};
 use serde::{Deserialize, Serialize};
 
 /// High-level intended action produced by deliberate reasoning modules.
@@ -20,7 +20,7 @@ pub struct ActionIntent {
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct DialogueTurn {
     /// Recipient of the dialogue.
-    pub target_id: AgentId,
+    pub target_id: CitizenId,
     /// Content of the message.
     pub content: String,
     /// Topic authorizing this dialogue turn.
@@ -30,7 +30,7 @@ pub struct DialogueTurn {
 /// Sole authoritative decision issued by the Cognitive Controller bottleneck.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct ControllerDecision {
-    /// Summary of the agent's current high-level intent.
+    /// Summary of the citizen's current high-level intent.
     pub intent_summary: String,
     /// Authorized action allowed to mutate world state.
     pub authorized_action: Option<ActionIntent>,
@@ -40,7 +40,7 @@ pub struct ControllerDecision {
     pub decided_at_tick: u64,
 }
 
-/// Snapshot of an agent's emotional state.
+/// Snapshot of a citizen's emotional state.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Default)]
 pub struct EmotionalSnapshot {
     /// Valence (-1.0 to 1.0) representing pleasantness.
@@ -51,11 +51,11 @@ pub struct EmotionalSnapshot {
     pub label: String,
 }
 
-/// The shared blackboard state for an individual agent in the PIANO model.
+/// The shared blackboard state for an individual citizen in the PIANO model.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-pub struct AgentState {
-    /// Unique agent identifier.
-    pub agent_id: AgentId,
+pub struct CitizenState {
+    /// Unique citizen identifier.
+    pub citizen_id: CitizenId,
     /// Current spatial location node.
     pub position: SpatialNodeId,
     /// Current action authorized by the Cognitive Controller.
@@ -70,11 +70,11 @@ pub struct AgentState {
     pub last_updated_tick: u64,
 }
 
-impl AgentState {
-    /// Creates a fresh `AgentState` initialized at a starting position.
-    pub fn new(agent_id: AgentId, position: SpatialNodeId) -> Self {
+impl CitizenState {
+    /// Creates a fresh `CitizenState` initialized at a starting position.
+    pub fn new(citizen_id: CitizenId, position: SpatialNodeId) -> Self {
         Self {
-            agent_id,
+            citizen_id,
             position,
             current_action: None,
             emotional_state: EmotionalSnapshot::default(),

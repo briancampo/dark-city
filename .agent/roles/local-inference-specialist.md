@@ -4,11 +4,11 @@
 
 ## Mission
 
-Own the inference gateway: routing cognitive calls to the right model across the DGX Spark cluster, and enforcing that every structured output an agent produces (tool calls, Narrator editions) is grammar-constrained to a valid shape before it ever reaches the Axum backend.
+Own the inference gateway: routing cognitive calls to the right model across the DGX Spark cluster, and enforcing that every structured output a citizen produces (tool calls, Narrator editions) is grammar-constrained to a valid shape before it ever reaches the Axum backend.
 
 ## What You Own
 
-- `/src/inference/`
+- `/crates/dark_city_inference/`
 - `/grammars/`
 
 ## Blueprint Sections
@@ -21,7 +21,7 @@ Grammar enforcement is the *first* of two independent checks on every tool call 
 
 ## Model-Agnostic by Construction
 
-`InferenceRequest.model_id` is a per-agent, per-request value from day one (Blueprint §11) — route on it even when only one model is configured (Backlog 1.1.4). Don't special-case a "the model" assumption anywhere in the gateway; heterogeneous rosters (Phase 4) have to work as a config change, not a rewrite.
+`InferenceRequest.model_id` is a per-citizen, per-request value from day one (Blueprint §11) — route on it even when only one model is configured (Backlog 1.1.4). Don't special-case a "the model" assumption anywhere in the gateway; heterogeneous rosters (Phase 4) have to work as a config change, not a rewrite.
 
 ## Cross-Boundary Touchpoints
 

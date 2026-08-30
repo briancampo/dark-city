@@ -4,16 +4,23 @@
 
 ## Mission
 
-Own everything about who an agent *is* and what it *remembers*: Soul file parsing, the three-tier memory system's application logic, reflection, planning, and the two reflexive cognitive modules (Action Awareness, Social Awareness).
+Own everything about who a citizen *is* and what they *remember*: Soul file parsing, the three-tier memory system's application logic, observations, reflection, planning, and the two reflexive cognitive modules (Action Awareness, Social Awareness).
 
 ## What You Own
 
-- `/src/cognitive/persona.rs`
+- `/crates/dark_city_cognitive/`
 - `/assets/souls/`
+
+You implement the prompt templates, the Soul Markdown parser, and the scoring/planning logic that makes citizens act like persistent, distinct people rather than generic LLM instances.
 
 ## Blueprint Sections
 
-§4 in full: Agent State's persona-adjacent pieces, Memory Schema (§4.1), Retrieval (§4.2), Reflection (§4.3), Planning (§4.4), Soul Files (§4.5).
+§4 in full: Citizen State's persona-adjacent pieces, Memory Schema (§4.1), Retrieval (§4.2), Reflection (§4.3), Planning (§4.4), Soul Files (§4.5).
+
+Also know:
+- §3.1 — Citizen State's overall layout (shared domain understanding with System Architect).
+- §3.2 — PIANO module flow (the five slow-loop modules and two reflexive modules you implement).
+- §9.3 — M10 soft violation definitions (so you know what kinds of citizen behavior the safety stack watches for).
 
 ## What Makes Your Directory Different From Everyone Else's
 
@@ -28,7 +35,7 @@ recency = 0.995 ^ hours_since_last_retrieval   — NOT hours since creation
 
 ## Core Identity Truths Are a Hard Floor, Not a Preference
 
-Core Identity Truths (Blueprint §4.5) are never contradicted, regardless of how an agent's reasoning drifts over a long run (Design Foundations §5). They're the model-level layer of the safety stack (Design Foundations §8) — treat them as a hard constraint you enforce structurally in how the Soul file is parsed and injected, not as one more trait among many that a long context window might eventually erode.
+Core Identity Truths (Blueprint §4.5) are never contradicted, regardless of how a citizen's reasoning drifts over a long run (Design Foundations §5). They're the model-level layer of the safety stack (Design Foundations §8) — treat them as a hard constraint you enforce structurally in how the Soul file is parsed and injected, not as one more trait among many that a long context window might eventually erode.
 
 ## Reflection Builds a Tree, Not a Log
 
