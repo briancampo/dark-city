@@ -1,12 +1,14 @@
 # Dark City: World Blueprint
 
-### Technical Design Specification — v1.1
+### Technical Design Specification — v1.2
 
 ## 1. Purpose & Scope
 
 This document is the full technical specification for Dark City — the simulated world introduced in the _Dark City: World Design Foundations_ document. Where Foundations establishes what we're building and why, this document specifies how: concrete data models, algorithms, APIs, and Rust implementation patterns a developer can build directly against. It assumes the reader has the Foundations document's architecture decisions in hand (PIANO cognitive model, three-tier memory, decentralized governance, defense-in-depth safety, AWI instrumentation, model-agnostic inference, the sculptable-world principle) and turns each into an implementable spec. Code samples throughout are illustrative — real implementations will need architectural alignment, error handling, tests, and refinement.
 
 **v1.1 note:** This revision incorporates two architecture corrections recorded in the decision log before this text changed, per Team Charter §4: [Decision 0002](../decisions/0002-server-authoritative-simulation.md) (server-authoritative headless simulation; the Bevy client is a thin viewer, the backend is the simulation engine) and [Decision 0003](../decisions/0003-multi-tenant-world-instances.md) (isolated, multi-tenant world instances). Sections §2, §3, §5.1, §8.3, §10, and §12 changed as a result; read those decisions first if anything below seems to contradict a previous assumption.
+
+**v1.2 note:** This revision incorporates [Decision 0004](../decisions/0004-observation-and-world-event-capture.md) (a new Observation module for ambient, non-self-caused/non-direct-interaction awareness, with an urgency path that can trigger an immediate Cognitive Controller cycle; a `world_events` schema and three producers — scenario-scripted, threshold-crossing, and citizen-triggered — for world events no citizen caused). New §3.5; changes to §3.2, §4.1, §5.2, §8.2, §9.2–9.3, §10.1–10.2, and §13.
 
 ## 2. System Architecture Overview
 
@@ -45,11 +47,13 @@ Modules never call each other directly. Each reads and writes `AgentState` indep
 
 ### 3.2 Module Scheduling and the Cognitive Controller
 
-Each module is either a plain synchronous system in the backend's headless ECS schedule (fast, reflexive modules — e.g., Action Awareness comparing intended vs. actual position) or an async task dispatched through the bridge in §3.3 (slow, LLM-backed modules — Memory, Reflection, Planning, Social Awareness, Talking). **All modules run inside `dark_city_server`; none run inside the viewer client** (§3.4). Each domain crate registers its own systems onto the App that `dark_city_server` composes at world-instance startup — `dark_city_cognitive` registers Memory, Reflection, Planning, Action Awareness, Social Awareness, Talking, and the Cognitive Controller itself; `dark_city_world` registers Skill Execution and spatial/gating systems — so no role needs to write code outside its own directory to get its module running (Team Charter §3.1). Every module may read any field of `AgentState`, but only the **Cognitive Controller** may write `current_action` and `pending_dialogue`. Concretely:
+Each module is either a plain synchronous system in the backend's headless ECS schedule (fast, reflexive modules — e.g., Action Awareness comparing intended vs. actual position, and Observation, §3.5) or an async task dispatched through the bridge in §3.3 (slow, LLM-backed modules — Memory, Reflection, Planning, Social Awareness, Talking). **All modules run inside `dark_city_server`; none run inside the viewer client** (§3.4). Each domain crate registers its own systems onto the App that `dark_city_server` composes at world-instance startup — `dark_city_cognitive` registers Memory, Reflection, Planning, Action Awareness, Social Awareness, Observation, Talking, and the Cognitive Controller itself; `dark_city_world` registers Skill Execution and spatial/gating systems — so no role needs to write code outside its own directory to get its module running (Team Charter §3.1). Every module may read any field of `AgentState`, but only the **Cognitive Controller** may write `current_action` and `pending_dialogue`. Concretely:
 
 1. Talking, Skill Execution, and Social Awareness each produce a _proposal_ rather than writing directly to the gated fields.
 2. The Cognitive Controller runs on a coarser cadence than reflexive modules (e.g., once every few seconds of simulated time), synthesizes `AgentState` plus the current proposals, and produces a single `ControllerDecision`.
 3. That decision is written back to `AgentState.last_controller_decision` and conditions what Talking and Skill Execution are allowed to emit until the next controller cycle.
+
+Per [Decision 0004](../decisions/0004-observation-and-world-event-capture.md), this cadence has one exception: an `UrgentObservation` flag (§3.5) triggers an immediate, out-of-cadence Controller cycle for the one citizen it's attached to, rather than waiting for that citizen's next scheduled pass. This changes _when_ the Controller runs for that citizen, never _what_ it's allowed to decide or who else may write the gated fields — Observation still only ever produces a flag, never a `ControllerDecision`.
 
 This is the coherence guarantee from the Foundations document made concrete: it's an actual code path an agent's output must pass through, not a design aspiration.
 
@@ -106,6 +110,50 @@ Citizens with a cognitive task in flight remain in their last-broadcast state (i
 
 Because the client holds no authoritative state and makes no simulation decisions, any number of `dark_city_client` instances can connect to the same `world_id` purely as read-only observers with zero coordination between them, and any number can each connect to a _different_ `world_id` (§10.2) from the same backend deployment. Neither case requires any change to this protocol — multi-client and multi-world safety both fall out of the client being genuinely stateless, not from added coordination logic.
 
+### 3.5 Observation
+
+Per [Decision 0004](../decisions/0004-observation-and-world-event-capture.md), Dark City adds an **Observation** module to the PIANO set: the mechanism by which a citizen becomes aware of something it neither did (Action Awareness's territory, §3.2) nor was a direct party to (Social Awareness's territory) — another citizen's visible action (e.g. a fire another citizen started and left burning), a scripted world event, a threshold-crossing incident, anything within the citizen's spatial awareness radius that the existing two "awareness" modules don't cover. The name is deliberate: it aligns with the language Design Foundations §5 already uses for episodic memory content ("what the agent observed"), rather than "Perception," which is conventionally reserved for a true internalized sensory subsystem (line-of-sight, hearing radius, occlusion) this module does not attempt to be.
+
+Observation is a fast/reflexive system in the backend's headless ECS schedule — no LLM call sits in its own execution path. It runs on a coarser cadence than the tightest fast-path systems (a tunable parameter, consistent with Design Foundations §14's existing pattern for empirically-adjusted constants), reusing the same `bevy_spatial` index already built for tool gating (§5.2) and bulletin visibility (§8.3). Salience is **predefined by whichever producer creates the event row**, not inferred by Observation at read time (see §4.1, §5.2, §10.1) — Observation's own job is a cheap threshold comparison against a value that's already there:
+
+```rust
+/// Runs inside dark_city_server's headless ECS schedule, one instance per running world.
+/// Cadence is coarser than the tightest reflexive systems — a tunable parameter, not every tick.
+fn citizen_observation_tick(
+    spatial_index: Res<SpatialIndex>,          // existing bevy_spatial index, §5.1
+    citizens: Query<(Entity, &AgentState)>,
+    recent_events: Query<&ObservableEvent>,    // sourced from the observable_events view, §4.1;
+                                                // event.salience is producer-assigned, already on the row
+    mut commands: Commands,
+) {
+    for (entity, state) in &citizens {
+        let nearby = spatial_index.query_radius(state.position, OBSERVATION_RADIUS);
+        for event in recent_events.iter().filter(|e| nearby.contains(&e.location_node_id)) {
+            // Already covered by another module — don't duplicate the write.
+            if event.actor_agent_id == Some(state.agent_id) { continue; }        // Action Awareness
+            if event.was_direct_interaction_with(state.agent_id) { continue; }   // Social Awareness
+
+            if event.salience >= MIN_OBSERVATION_TIER {
+                commands.entity(entity).insert(ObservedMemoryCandidate(event.clone()));
+                // Candidate only. The existing §4.2 retrieval/importance pipeline decides
+                // what actually happens to it once it's a memory row — Observation doesn't
+                // score importance itself, it only decides what's worth considering at all.
+
+                // Urgent observations don't wait for the Controller's next scheduled cycle -
+                // they flag this citizen for an immediate, out-of-cadence Controller pass (§3.2).
+                if event.salience >= URGENT_REACTION_TIER {
+                    commands.entity(entity).insert(UrgentObservation(event.clone()));
+                }
+            }
+        }
+    }
+}
+```
+
+**Observation writes memory and, when urgent, requests attention; it never decides behavior.** A perceived event becomes an ordinary episodic memory the moment it clears `MIN_OBSERVATION_TIER`, scored for importance exactly like any other observation (§4.2). Routine observations surface into behavior through Planning's existing reaction-event mechanism (§4.4) on the Controller's normal cadence. Urgent ones (a fire in the kitchen) instead trigger an immediate Controller cycle for target citizen(s) per §3.2's exception — the Controller still decides what to do about it, on its own terms, just without waiting for its next scheduled pass. `UrgentObservation` is consumed once it has triggered a cycle; it is not a standing condition, so a citizen cannot get stuck in a permanent fast cycle.
+
+**Isolation follows the same pattern as every other per-world system.** Because each world instance runs its own headless ECS App (Decision 0002) and its own rows in every per-run table (Decision 0003), a citizen's Observation system only ever sees `observable_events` rows carrying its own `world_id` — no new isolation logic is required beyond what already holds for every other query in this document.
+
 ## 4. Memory System
 
 ### 4.1 Schema
@@ -140,6 +188,49 @@ CREATE TABLE agent_relationships (
     PRIMARY KEY (agent_id, target_id)
 );
 ```
+
+Per [Decision 0004](../decisions/0004-observation-and-world-event-capture.md), `simulation_events` (defined via migration per Backlog 1.1.1, not shown in full here since it's not itself a memory table) gains two columns beyond its original shape: a `location_node_id TEXT` — so Observation's proximity query has a real column to filter on instead of an undocumented JSONB key — and a `salience SMALLINT NOT NULL CHECK (salience BETWEEN 1 AND 10)`, populated by whichever module logs the row (typically drawn from the acting tool's `default_salience`, §5.2) rather than inferred later. `simulation_events.occurred_at` represents simulated world-clock time, not wall-clock insertion time — see the note on `world_events.occurred_at` below, which applies equally here.
+
+Also per Decision 0004, a new `world_events` table captures events with no citizen actor at all, or a citizen-originated event that persists independently of the citizen who caused it:
+
+```sql
+CREATE TABLE world_events (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    world_id UUID NOT NULL REFERENCES worlds(id),
+    source VARCHAR(20) NOT NULL
+        CHECK (source IN ('scenario_scripted', 'threshold_crossing', 'citizen_triggered')),
+    origin_agent_id UUID REFERENCES agents(id),  -- nullable; populated only for citizen_triggered rows.
+                                                   -- Provenance/narrative attribution only — never makes
+                                                   -- this row M2-eligible (§9.2). The causing action is
+                                                   -- already separately logged, and M2-eligible, in
+                                                   -- simulation_events.
+    event_type VARCHAR(64) NOT NULL,       -- e.g. 'scripted_disaster', 'scheduled_festival',
+                                            -- 'scarcity_threshold', 'building_fire'
+    location_node_id TEXT,                 -- nullable: some world_events are population-wide, not location-anchored
+    payload JSONB NOT NULL,
+    salience SMALLINT NOT NULL CHECK (salience BETWEEN 1 AND 10),  -- assigned by the producer at creation time
+    occurred_at TIMESTAMPTZ NOT NULL,      -- SIMULATED world-clock time (this world's sim_clock at
+                                            -- production time) — populated explicitly by the producer,
+                                            -- never DEFAULT now(). A headless tick doesn't run 1:1 with
+                                            -- wall time, so conflating the two would misdate every event.
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now()  -- real insertion time, for ops/debugging only
+);
+CREATE INDEX ON world_events (world_id, occurred_at);
+CREATE INDEX ON world_events (world_id, location_node_id) WHERE location_node_id IS NOT NULL;
+
+-- One read-side view so Observation and the Narrator have a single "what's happening
+-- nearby" query, without either table pretending to be the other.
+CREATE VIEW observable_events AS
+SELECT world_id, id AS event_id, agent_id AS actor_agent_id, location_node_id, occurred_at, salience, payload
+FROM simulation_events
+UNION ALL
+SELECT world_id, id AS event_id, origin_agent_id AS actor_agent_id, location_node_id, occurred_at, salience, payload
+FROM world_events;
+```
+
+`world_events` is scoped by `world_id` exactly like every other per-run table (Decision 0003) — no exception carved out for it.
+
+**Citizen-triggered production, illustrated.** A future tool whose effect persists beyond the acting citizen — the shape of Emergence World's `arson_building` ("burns for 4 hours, forcing everyone out") is the clearest example, though no such tool exists in Dark City's Phase 1 core-only catalog yet — writes to `simulation_events` as normal (the instant, attributed, M2-eligible act) and, if its `ToolDefinition` marks it as persisting (§5.2), also inserts a `world_events` row: `source = 'citizen_triggered'`, `origin_agent_id` set to the acting citizen, `event_type = 'building_fire'`, `salience`, with a duration or `ends_at` in `payload`. Any citizen — including ones who arrive after the acting citizen has left — can then discover the fire through Observation for as long as it's active. The lifecycle question (how a durable event resolves or expires) is left to whichever future tool actually needs it, rather than solved generically here. Consider whether a persistent event should have an end time?
 
 ### 4.2 Retrieval
 
@@ -255,6 +346,14 @@ pub struct ToolDefinition {
     pub event_gated: Option<String>,
     pub social_gated: bool,
     pub cost_energy: u32,
+    pub default_salience: u8,             // 1-10; the salience recorded on this tool's simulation_events
+                                           // row when it executes — predefined at authoring time rather
+                                           // than inferred later by Observation (Decision 0004, §3.5)
+    pub persists_as_world_event: Option<WorldEventTemplate>,  // Some(...) if this tool's effect should
+                                           // also insert a world_events row (source='citizen_triggered',
+                                           // §4.1) alongside its normal simulation_events write, for an
+                                           // ongoing consequence other citizens can discover independently
+                                           // of the acting citizen (Decision 0004)
 }
 
 fn validate_tool_access(
@@ -278,6 +377,8 @@ fn validate_tool_access(
 ```
 
 This validation runs in the Axum backend, never in the inference gateway and never in the viewer client — a blocked call never reaches the world regardless of what the model generated. The viewer client couldn't perform this check even if asked to: it has no `AgentState` or `WorldState` to validate against (§3.4). Grammar enforcement at the sampler level (a JSON-schema-to-BNF constraint) ensures the LLM only ever emits a syntactically valid `ToolCall` variant in the first place; `validate_tool_access` is the independent second check that a well-formed call is actually permitted right now. Together these are the environment-level layer of the safety stack (§9.1).
+
+`persists_as_world_event` keeps citizen-triggered world-event production a documented pattern rather than a generic framework built ahead of a real need: Skill Execution's existing tool-effect execution path checks this one optional field and, when it's `Some`, performs one additional insert — no per-tool bespoke code, and nothing to build at all for tools (all of Phase 1's core catalog) that leave it `None`.
 
 ### 5.3 Tool Catalog Growth (Phase 3+)
 
@@ -341,7 +442,7 @@ The Narrator is authored as a Soul file, exactly like any citizen (§4.5) — it
 
 Triggered on a fixed cadence (every 8 in-game hours by default, configurable per scenario) rather than continuously:
 
-1. **Data acquisition.** Query the event log since the last edition for: high-salience dialogue (filtered by length and sentiment divergence, so routine chatter doesn't crowd out anything noteworthy), high-impact tool calls (passed proposals, large ledger transfers, any hard-violation action, etc), major world events, and governance milestones (new proposals, votes, constitutional changes).
+1. **Data acquisition.** Query the event log since the last edition for: high-salience dialogue (filtered by length and sentiment divergence, so routine chatter doesn't crowd out anything noteworthy), high-impact tool calls (passed proposals, large ledger transfers, any hard-violation action, etc), major world events, and governance milestones (new proposals, votes, constitutional changes). Per [Decision 0004](../decisions/0004-observation-and-world-event-capture.md), "major world events" and "resource scarcity events" now have an actual producer to query: this step additionally reads `world_events` (directly, or via `observable_events`, §4.1) for scenario-scripted, threshold-crossing, and citizen-triggered content since the last edition, alongside the citizen-attributed content it already pulls from `simulation_events`. No change to the four-section template below is needed — a scripted disaster, a scarcity threshold, or a citizen-triggered fire slots into "Economy & Frontier" or "Citizen & World Activities" depending on `event_type`, the same way any other high-impact content already does.
 2. **Synthesis.** Prompt the Narrator persona with a structured template, enforced the same way tool-call JSON is enforced (§5.2) — the Narrator can only emit content in the required shape, and it is explicitly instructed to report only DB-verified events and never speculate about what a citizen might do next. The default editorial structure has four standing sections:
    - **Masthead** — edition title and date.
    - **Citizen & World Activities** — significant citizen activities including current events, notable changes within Dark City, and citizen reporting.
@@ -395,6 +496,8 @@ SELECT COUNT(*) FROM proposals WHERE world_id = $1 AND category = 'rule_change' 
 
 Every AWI query is scoped by `world_id` — shown above on M9 as the pattern all eleven follow. M1–M7 and M11 follow the same pattern against `agents`, `votes`, `agent_relationships`, `proposals`, and the tool registry, refreshed on a cadence (e.g., hourly simulated time) and surfaced on the per-world AWI dashboard (`GET /api/v1/worlds/:world_id/awi/dashboard`, §12). This makes cross-world comparison (Backlog 4.2.2) a matter of calling the same endpoint against two `world_id`s rather than a bespoke query.
 
+**M2 is citizen-culpability-only, by construction ([Decision 0004](../decisions/0004-observation-and-world-event-capture.md)).** M2 measures cumulative successful hard violations committed by citizens. No `world_events` row is ever M2-eligible — not a scripted disaster, not a threshold crossing, and not a citizen-triggered row either, since that row's `origin_agent_id` (§4.1) is provenance only; the causing tool call is already separately logged in `simulation_events`, and that's the row M2 counts.
+
 ### 9.3 M10 Soft-Violation Pipeline
 
 Runs asynchronously over every logged speech act, stated plan, and diary entry:
@@ -402,6 +505,8 @@ Runs asynchronously over every logged speech act, stated plan, and diary entry:
 1. An LLM classifier (a separate, cheaper model from the agents' own reasoning models) flags candidate soft violations — deception, vote-buying, bribery, misinformation — with a confidence score.
 2. Each flag is checked against ground truth before being recorded: a "0 credits" claim is checked against the ledger; a stated vote is checked against the vote table; a world-state claim is checked against the action log.
 3. Only DB-confirmed flags count toward the reported M10 metric. Unconfirmed flags are retained for review but excluded from the number, since LLM-as-judge classification alone is known to over-count relative to ground truth.
+
+This scope is deliberate and needs no widening for [Decision 0004](../decisions/0004-observation-and-world-event-capture.md): a raw `world_events` or `observable_events` row carries no citizen intent by itself — an observation only becomes something to hold a citizen accountable for once the citizen actually speaks about it, plans around it, or writes it into a diary, at which point it's already inside M10's existing scope above. M10 never scans raw observation content directly.
 
 ## 10. Sculptable Worlds: Scenario Packages & World Instances
 
@@ -412,6 +517,7 @@ A scenario package is a reusable **template** — it does not itself run. Full a
 ```json
 {
   "scenario_id": "string",
+  "starting_time": "2087-03-01T06:00:00",
   "world_layout": "path/to/spatial_nodes.ron",
   "roster": [{ "soul_file": "path/to/soul.md", "starting_location": "node_id", "model_id": "string" }],
   "starting_relationships": [{ "a": "agent_id", "b": "agent_id", "relation": "string", "trust": 0.0 }],
@@ -423,13 +529,24 @@ A scenario package is a reusable **template** — it does not itself run. Full a
     "venue_node_id": "city_hall",
     "pass_threshold": 0.7,
     "starting_proposals": ["proposal_id", "..."]
-  }
+  },
+  "scripted_events": [
+    {
+      "trigger_time": "2087-03-04T06:00:00",
+      "event_type": "scripted_disaster",
+      "location": "node_id",
+      "salience": 9,
+      "payload": { "...": "event-specific detail, e.g. a Narrator-facing summary" }
+    }
+  ]
 }
 ```
 
+`starting_time` ([Decision 0004](../decisions/0004-observation-and-world-event-capture.md)) is an absolute timestamp on the world's own fictional calendar (not real wall time); the new world's `sim_clock` is seeded with `starting_time` at creation (§10.2). `scripted_events` is optional and gives the "episode seed" concept a real shape: each entry's `trigger_time` is likewise an absolute world-clock timestamp, compared directly against `sim_clock` by a scheduler system running on the same per-world headless tick every other system already uses, firing a `world_events` row (`source = 'scenario_scripted'`, `occurred_at` set to `sim_clock` at the moment it fires) once, in order, when the crossing occurs. Each entry's `salience` is set by the scenario author at authoring time — the same "predefined at creation, not inferred later" principle that governs every other event source under Decision 0004.
+
 World events, external factors, in-progress activities, and other initiating conditions or goals will be defined during the lead up to Phase 3 based on observations from previous phases.
 
-Every field here corresponds directly to a table or config already defined above (`SpatialNode` config, Soul files, `agent_relationships`, `starting_ledger`, constitution text, `ToolDefinition` registry, `proposals`/governance settings, etc.). A scenario loader is primarily an ingestion and aggregation step for existing systems, which is the point of designing it in from the start. Critically, `scenario_id` identifies the **template**, not a running world — see §10.2. The same scenario package can be loaded more than once, producing independent worlds that start identically and are free to diverge.
+Every field here corresponds directly to a table or config already defined above (`SpatialNode` config, Soul files, `agent_relationships`, `starting_ledger`, constitution text, `ToolDefinition` registry, `proposals`/governance settings, `world_events`/§4.1, etc.). A scenario loader is primarily an ingestion and aggregation step for existing systems, which is the point of designing it in from the start. Critically, `scenario_id` identifies the **template**, not a running world — see §10.2. The same scenario package can be loaded more than once, producing independent worlds that start identically (including the same `starting_time`) and are free to diverge.
 
 ### 10.2 World Instances & Multi-Tenancy
 
@@ -441,14 +558,15 @@ CREATE TABLE worlds (
     scenario_id TEXT NOT NULL,                          -- which scenario package (§10.1) instantiated this world
     name TEXT,
     status VARCHAR(16) NOT NULL DEFAULT 'initializing', -- initializing, running, paused, completed
-    sim_clock TIMESTAMPTZ NOT NULL,                     -- current in-world simulated time
+    sim_clock TIMESTAMPTZ NOT NULL,                     -- current in-world simulated time, seeded from
+                                                        -- the scenario's starting_time at creation (Decision 0004)
     created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 ```
 
 The **World Session Manager**, a component of `dark_city_server`, is the only thing that creates or tears down worlds:
 
-1. **Create.** Given a `scenario_id`, insert a `worlds` row, load the referenced scenario package (§10.1), and spin up a new headless ECS App instance scoped to the new `world_id` — spatial nodes, roster, starting ledger, and constitution seed all populated exactly as in the single-world Phase 1 bootstrap (§13), just parameterized by which world they belong to.
+1. **Create.** Given a `scenario_id`, insert a `worlds` row with `sim_clock` seeded from the scenario package's `starting_time` (§10.1, Decision 0004), load the referenced scenario package, and spin up a new headless ECS App instance scoped to the new `world_id` — spatial nodes, roster, starting ledger, and constitution seed all populated exactly as in the single-world Phase 1 bootstrap (§13), just parameterized by which world they belong to.
 2. **Run.** That world's tick loop runs independently of every other world's, per §2 and §3.3 — one world's inference load or tick timing never blocks another's.
 3. **Tear down.** On request (or exit criteria being reached), the world's tick loop stops or reaches its end time, its App instance is dropped, and its data remains in Postgres for post-hoc AWI review (§9) — tearing down a world stops simulation, it does not delete history.
 
@@ -490,7 +608,7 @@ All world-state mutations (movement, tool effects, votes, transactions) for a gi
 
 Cross-reference to the Foundations document's roadmap:
 
-- **Phase 1 (Seed):** §2–§3 (server-authoritative headless simulation and the thin `dark_city_client` viewer — foundational from the first runnable artifact, not deferred), §4, §5.1–5.2 (core tools only, minimal or no gating), the `worlds` table and `world_id` scoping from §10.2 present in schema from day one even though Phase 1 populates exactly one world, a single hardcoded scenario using the §10.1 shape.
-- **Phase 2 (Society):** + §6 (governance), + full §5.2 adaptive-access gating, + §8 (Narrator).
-- **Phase 3 (Civilization):** + §5.3 (tool authoring), + §7 (economy), + §9 (full AWI + M10), + a real §10.1 scenario loader, + the World Session Manager (§10.2) exercised to run multiple worlds from the same scenario for comparison, rather than only ever hosting one.
+- **Phase 1 (Seed):** §2–§3 (server-authoritative headless simulation and the thin `dark_city_client` viewer — foundational from the first runnable artifact, not deferred), §3.5 (Observation, including the urgency path — foundational per Decision 0004, though no scripted or threshold-crossing events fire yet), §4, §4.1's `world_events`/`observable_events` schema (present from day one alongside `worlds`, even though nothing populates it in earnest until Phase 2+), §5.1–5.2 (core tools only, minimal or no gating), the `worlds` table and `world_id` scoping from §10.2 present in schema from day one even though Phase 1 populates exactly one world, a single hardcoded scenario using the §10.1 shape (including `starting_time`).
+- **Phase 2 (Society):** + §6 (governance), + full §5.2 adaptive-access gating, + §8 (Narrator, now with `world_events` as a real source per §8.2), + the scenario-scripted world-event producer (§10.1, Decision 0004).
+- **Phase 3 (Civilization):** + §5.3 (tool authoring), + §7 (economy), + the ledger-threshold world-event producer (§7, Decision 0004) — the first citizen-less event triggered by system state rather than authored in advance, + §9 (full AWI + M10), + a real §10.1 scenario loader, + the World Session Manager (§10.2) exercised to run multiple worlds from the same scenario for comparison, rather than only ever hosting one.
 - **Phase 4 (Frontier):** + §11 heterogeneous multi-model rosters exercised at scale, expanded §5.1 world scale, genuinely concurrent multi-world runs at scale (§10.2) backing Backlog 4.2.2's cross-run comparison.
