@@ -63,7 +63,7 @@ Yes, I'd like you to go ahead with the skill renaming to make it clear the diffe
 
 ====
 
-Fixes for gh-task-ops.sh:
+some additional Fixes for gh-task-ops.sh:
 
 - the assign command doesn't seem to create the branch on github or associate the branch with the assigned issue.
 - please check to make sure that the pr create command moves the applicable work item to the review column so it is clear that the next assignment will be a pr review.

@@ -64,6 +64,7 @@ Every research brief and proposal must evaluate its **backlog insertion point** 
 | :--------------------------------------------------------------------------------------------- | :------------------------------------ | :------------- | :----------------- | :------------------ | :---------------------------- |
 | [`research-brief-environmental-world-events.md`](research-brief-environmental-world-events.md) | Environmental & External World Events | Research Brief | System Architect   | Epic 2.7 (Phase 2)  | Pending Phase 2 Spike (2.7.1) |
 | [`research-brief-goal-generation.md`](research-brief-goal-generation.md)                       | Citizen Goal Generation               | Research Brief | Character Sculptor | Epic 2.8 (Phase 2)  | Pending Phase 2 Spike (2.8.1) |
+| [`research-brief-citizen-affective-state.md`](research-brief-citizen-affective-state.md)       | Citizen Emotional & Affective Dynamics | Research Brief | Character Sculptor | Epic 2.9 (Phase 2)  | Pending Phase 2 Spike (2.9.1) |
 
 ---
 
