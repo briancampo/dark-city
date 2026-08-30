@@ -37,10 +37,11 @@ I'd like to take this session to work on a few project level improvements before
   - If a proposal is accepted it would create a decision brief along with an integration plan that becomes a work item to integrate the decision into the project
     - Documentation, Epic/Stories/Tasks, and other updates will need to be included in the work item to integrate the decision.
     - Part of a research brief's preparation should be to consider sequencing the research activity, the integration, and the potential work against the current project backlog schedule so we can decide where in the backlog to insert each effort. For instance if the proposed element does not impact the project until Phase 3 we may decide to defer adding the research/proposal development work until phase 2 and place the decision task as the last work element of phase 2. That would allow for the work to be sequenced into Phase 3 effectively. Conversely if there is an immediate impact we may decide to defer current work to complete all phases now and resume regularly scheduled work items once the decision has been made and any downstream work has been sequenced.
-  - The two existing research briefs have some proposed sequencing included in them for reference that should be integrated into the project. This illustrates the structure and process I am proposing.  
+  - The two existing research briefs have some proposed sequencing included in them for reference that should be integrated into the project. This illustrates the structure and process I am proposing.
 
 Fixes for gh-task-ops.sh:
 
+- the assign command doesn't seem to create the branch on github or associate the branch with the assigned issue.
 - please check to make sure that the pr create command moves the applicable work item to the review column so it is clear that the next assignment will be a pr review.
 - finish command should early exit with a message to the user and not make any changes if there is not a PR for the current ticket. We don't want to do partial finish if a pr has not been created.
 - once finish has completed I'd like the terminal to provide a cd command to go back to the main repo (/home/brian/dev/ai/dc-root) like it does for the assign command.
