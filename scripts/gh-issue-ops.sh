@@ -494,7 +494,7 @@ When implementation is complete:
 ## 6. Copy-Paste Session Bootstrap Prompt
 
 ```markdown
-/session-start
+/start-session
 You are the {owner} for the Dark Factory team, building Dark City.
 
 Assigned Ticket: [{sid}] {title}
@@ -508,7 +508,7 @@ MANDATORY WORKSPACE RULE: Verify that your working directory is exactly {wt_path
 
 Pull the ticket title, goal, and acceptance criteria from docs/backlog.md and your GitHub issue.
 
-Run Session Start Workflow (.agent/workflows/session-start.md) in full, starting at step 1. Stop at step 7 and report back to the Tech Lead (technical) or Steward (scope) if you hit a genuine ambiguity — don't guess past it.
+Run Session Start Workflow (.agent/workflows/start-session.md) in full, starting at step 1. Stop at step 7 and report back to the Tech Lead (technical) or Steward (scope) if you hit a genuine ambiguity — don't guess past it.
 ```
 """
 

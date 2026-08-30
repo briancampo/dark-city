@@ -1,9 +1,9 @@
 ---
-name: review-pr
-description: Perform an independent, senior-perspective Pull Request review for the Dark Factory codebase. Trigger on "/review-pr", "review-pr", "PR review", "review pull request", "conduct code review", or "independent review".
+name: pr-review-toolkit
+description: Perform an independent, senior-perspective Pull Request review for the Dark Factory codebase. Provides the 5-dimension quality checklist and P0-P3 review report template. Trigger on "pr-review-toolkit", "PR review checklist", "review pull request", "conduct code review", or "independent review".
 ---
 
-# Dark Factory Skill: Lead Developer PR Review (`/review-pr`)
+# Dark Factory Skill: PR Review Toolkit (`pr-review-toolkit`)
 
 Use this skill when conducting an independent, critical Pull Request review.
 

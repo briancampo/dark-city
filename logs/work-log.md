@@ -44,19 +44,25 @@ Every developer agent session completing an assigned work item or ticket MUST ap
 
 ## Active Log Entries (Newest on Top)
 
-### [2026-08-30] [N/A] Repository Bootstrap & Tooling Modernization
+### [2026-08-30] Story/Task [N/A]: Developer Process & Quality System Modernization
 
 - **Role:** Steward / Tech Lead
-- **Phase / Epic:** Phase 1 — Repository Bootstrap
-- **GH Issue/PR:** 07 / TBD
+- **Phase / Epic:** Phase 1 — Repository Bootstrap & Tooling
+- **GH Issue/PR:** #7 / TBD
 - **Key Deliverables & Changes:**
-  - Initialized Cargo workspace with crates (`dark_city_core`, `dark_city_server`, `dark_city_world`, `dark_city_cognitive`, `dark_city_inference`, `dark_city_client`, `dark_city_instrumentation`, `xtask`).
-  - Built GitHub CLI task and issue automation scripts (`scripts/gh-task-ops.sh`, `scripts/gh-issue-ops.sh`).
-  - Established Dual-Gate PR review workflows (`/review-pr`), mission brief scaffolding, review briefs, and comprehensive developer process frameworks.
+  - Standardized the Workflow vs. Skill architecture: Workflows (`.agent/workflows/<action>-<target>.md`) for procedural session runbooks, and Skills (`.agent/skills/<name>-toolkit/`) for reusable capabilities, checklists, and templates.
+  - Implemented the Lead Developer PR Review system: `/review-pr` workflow, `pr-review-toolkit` skill with 5-dimension quality checklist (plus static analysis and documentation consistency), and structured P0-P3 review template.
+  - Implemented the Epic Inception & Planning system: `/plan-epic` workflow and `epic-planning-toolkit` skill with Context-Window & Complexity Bounded Slicing and GitHub project hierarchy management.
+  - Implemented the Epic Retrospective system: `/conduct-retrospective` workflow and `retrospective-toolkit` skill with User Live Demo walkthroughs and durable retro briefs.
+  - Established durable session completion artifacts: `logs/work-log.md` with phase-based archiving guidelines and automated review brief scaffolding (`scripts/gh-task-ops.sh scaffold-review`).
+  - Formalized the 5-stage proposal and research lifecycle in `proposals/` and integrated Epics 2.7 (Environmental Events) and 2.8 (Citizen Goal Generation) into `docs/backlog.md`.
+  - Upgraded CLI automation in `scripts/gh-issue-ops.sh` and `scripts/gh-task-ops.sh` to scaffold briefs and ensure worktree path isolation.
 - **Key Architectural Decisions & Learnings:**
+  - Clearly separated permanent architectural identity (`[Backlog_ID]` e.g. `[1.1.1]`) from ephemeral GitHub project tracking (`#Issue_ID` e.g. `#87`).
+  - Ratified 100% test integrity mandate (eliminating vacuous `is_ok()` assertions) and zero-tolerance for leaky public visibility.
   - Ratified Decision 0002 (server-authoritative headless simulation, thin viewer client).
   - Ratified Decision 0003 (multi-tenant isolated world instances).
   - Ratified Decision 0004 (Observation module and `world_events` schema).
   - Ratified Decision 0006 (Tool Review Agent for citizen-authored code audit).
 - **Downstream Impact & Follow-up Notes:**
-  - Ready for Phase 1 foundational infrastructure implementation (Story 1.1.1 Postgres + pgvector provisioning).
+  - All developer agents and workflows are fully equipped for rigorous, isolated task execution starting with Phase 1 Story 1.1.1 (Postgres + pgvector provisioning).

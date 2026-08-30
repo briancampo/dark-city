@@ -1,7 +1,7 @@
 <!--
 Decision Log Template — Dark Factory Team Charter §6.
 Copy this file to /decisions/NNNN-short-slug.md, fill it in, and number sequentially.
-See the decision-log-entry skill for full guidance on when an entry is required.
+See the decision-log-toolkit skill for full guidance on when an entry is required.
 -->
 
 # [NNNN] Short Decision Title

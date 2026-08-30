@@ -18,7 +18,7 @@ To prevent confusion between the simulation and the development team, strictly a
 2. **[World Blueprint](docs/dark-city-blueprint.md)** — the technical spec of Dark City: cognitive architecture, memory, world/tools, governance, instrumentation.
 3. **[Team Charter](docs/project-charter.md)** — how the Dark Factory team works: roles, worktrees, engineering principles, Dual-Gate PR review, decision log.
 4. **This file** — quick reference once you've read the above.
-5. **[Session Start Workflow](.agent/workflows/session-start.md)** — the concrete checklist you run right now, at the top of every session.
+5. **[Session Start Workflow](.agent/workflows/start-session.md)** — the concrete checklist you run right now, at the top of every session.
 6. **Key Workflows:**
    - **Lead Developer PR Review (`/review-pr`):** [`.agent/workflows/review-pr.md`](.agent/workflows/review-pr.md)
    - **Epic Inception & Planning (`/plan-epic`):** [`.agent/workflows/plan-epic.md`](.agent/workflows/plan-epic.md)
@@ -141,4 +141,4 @@ Pause. Raise technical questions to the Tech Lead and backlog/scope questions to
 
 ## Start Here
 
-Go to **[Session Start Workflow](.agent/workflows/session-start.md)** now — it's the actual checklist for this session, not just background reading.
+Go to **[Session Start Workflow](.agent/workflows/start-session.md)** now — it's the actual checklist for this session, not just background reading.

@@ -1,9 +1,9 @@
 ---
-name: conduct-retrospective
-description: Facilitate a Dark Factory Epic Retrospective, conduct live user demos, gather multi-role feedback, and produce retro briefs. Trigger on "/conduct-retrospective", "/epic-retro", "/retrospect-epic", "epic retrospective", "sprint retro", or "conduct retrospective".
+name: retrospective-toolkit
+description: Facilitate a Dark Factory Epic Retrospective, conduct live user demos, gather multi-role feedback, and produce retro briefs. Trigger on "retrospective-toolkit", "epic retrospective", "sprint retro", or "conduct retrospective".
 ---
 
-# Dark Factory Skill: Epic Retrospective (`/conduct-retrospective`)
+# Dark Factory Skill: Retrospective Toolkit (`retrospective-toolkit`)
 
 Use this skill to facilitate an end-of-epic retrospective, demonstrate running software to the user, gather cross-role learnings, and generate a durable retrospective brief.
 

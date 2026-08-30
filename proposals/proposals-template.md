@@ -1,7 +1,7 @@
 <!--
 Cross-Boundary Proposal RFC Template — Dark Factory Team Charter §5.
 Copy this file to /proposals/NNNN-short-slug.md, fill it in, and number sequentially.
-See the cross-boundary-rfc skill for full guidance on the review process.
+See the cross-boundary-rfc-toolkit skill for full guidance on the review process.
 -->
 
 # [NNNN] Short Proposal Title

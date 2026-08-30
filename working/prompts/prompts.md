@@ -7,7 +7,7 @@
 #### Backend Dev Start
 
 ```prompt
-/project-session-start \
+/start-session \
   --role /rust-developer \
   --domain "developer-backend" \
   --github-issue 87 \
@@ -20,7 +20,7 @@
 #### Client Dev Start (example)
 
 ```prompt
-/project-session-start \
+/start-session \
   --role /bevy-developer \
   --domain "developer-client" \
   --github-issue 89 \
@@ -33,7 +33,7 @@
 ### Code Review Prompts
 
 ```prompt
-/project-session-start \
+/start-session \
   --role /tech-lead \
   --domain "reviewer" \
   --github-issue 178 \

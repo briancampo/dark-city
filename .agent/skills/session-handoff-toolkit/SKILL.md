@@ -1,9 +1,9 @@
 ---
-name: session-handoff-note
-description: Use at the end of any Dark Factory working session, whether or not the ticket is finished — Session Start Workflow step 10 and Charter §8 both require one before a PR opens. Trigger on "write a handoff note," "wrap up this session," or "what does the next session need to know."
+name: session-handoff-toolkit
+description: Use at the end of any Dark Factory working session, whether or not the ticket is finished — Session Start Workflow step 10 and Charter §8 both require one before a PR opens. Trigger on "session-handoff-toolkit", "write a handoff note," "wrap up this session," or "what does the next session need to know."
 ---
 
-# Session Handoff Note
+# Session Handoff Toolkit (`session-handoff-toolkit`)
 
 ## Purpose (Charter §8)
 

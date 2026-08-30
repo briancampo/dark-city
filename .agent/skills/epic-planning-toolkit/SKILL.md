@@ -1,9 +1,9 @@
 ---
-name: plan-epic
-description: Plan, assess, decompose, and scaffold a new Dark Factory Epic or Sprint. Trigger on "/plan-epic", "/epic-plan", "plan epic", "epic planning", "start epic", "sprint planning", or "decompose epic".
+name: epic-planning-toolkit
+description: Plan, assess, decompose, and scaffold a new Dark Factory Epic or Sprint. Provides Context-Window & Complexity Bounded Slicing guidelines and GitHub project hierarchy structures. Trigger on "epic-planning-toolkit", "plan epic", "epic planning", "start epic", "sprint planning", or "decompose epic".
 ---
 
-# Dark Factory Skill: Epic Inception & Planning (`/plan-epic`)
+# Dark Factory Skill: Epic Planning Toolkit (`epic-planning-toolkit`)
 
 Use this skill when initiating a new Epic, conducting pre-flight gap analysis, slicing stories into context-bounded tasks, configuring GitHub project hierarchies, and scaffolding enriched mission briefs.
 

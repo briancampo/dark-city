@@ -49,6 +49,17 @@ A few additional considerations:
 - What is the difference between the items in workflows and the related skills version in the skills directory? I'm not clear on which will get used when how to keep them consistent. 
 - Is it clear when to use the backlog id and when to use the github issue id?  Will an agent be confused when trying to navigate that relationship? 
 
+----
+
+Thanks for the overview on the skills vs workflows. If i understand correctly, we should focus on directing agents to execute workflows specifically and they will load the skills and resources as needed? If that is the case it seems like we should alter the naming of one or the other so that our agents can easily differentiate them.  I would like to have a consistent way to name each of them so it is easy to direct the agents and they will clearly know what is being asked. 
+
+Great description and plan for backlog and issue id. I made some edits to the previous work and am not sure if i kept it consistent with what yoa are proposing.  Can you check the work to make sure it follow your proposed approach. 
+
+----
+
+I want to make sure you checked more than just the renaming of `start-session` for the use of backlog_id and github_id. I also made changes to the work log and some of the templates. If you did check that is great, I just wanted to make sure. 
+
+Yes, I'd like you to go ahead with the skill renaming to make it clear the difference between the two and make sure my edits to both sets are consistent with your proposed approach. When I made the edits previously I didn't have that difference in mind. 
 
 ====
 

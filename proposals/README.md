@@ -33,7 +33,7 @@ An architectural gap, feature opportunity, or literature precedent is identified
 
 ### Stage 4: Decision ADR (`decisions/NNNN-*.md`)
 
-- When a proposal is approved, the Steward ratifies it into a permanent Architecture Decision Record in `/decisions/` using the `decision-log-entry` skill.
+- When a proposal is approved, the Steward ratifies it into a permanent Architecture Decision Record in `/decisions/` using the `decision-log-toolkit` skill.
 
 ### Stage 5: Integration Work Item
 

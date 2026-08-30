@@ -1,9 +1,9 @@
 ---
-name: decision-log-entry
-description: Use when writing an entry to /decisions/ under the Dark Factory Team Charter — for any deviation from the World Blueprint or Design Foundations, any question those documents leave genuinely open, or any ambiguity the Steward resolved during a session. Trigger on "log this decision," "write a decision log entry," "document why we chose X," or when Session Start Workflow step 10 or Definition of Done (Charter §7) calls for one.
+name: decision-log-toolkit
+description: Use when writing an entry to /decisions/ under the Dark Factory Team Charter — for any deviation from the World Blueprint or Design Foundations, any question those documents leave genuinely open, or any ambiguity the Steward resolved during a session. Trigger on "decision-log-toolkit", "log this decision," "write a decision log entry," "document why we chose X," or when Session Start Workflow step 10 or Definition of Done (Charter §7) calls for one.
 ---
 
-# Decision Log Entry
+# Decision Log Toolkit (`decision-log-toolkit`)
 
 ## When You Need One (Charter §6, §7)
 

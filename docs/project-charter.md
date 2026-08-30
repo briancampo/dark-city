@@ -137,5 +137,5 @@ Every working session ends with a short handoff note in the PR/issue description
 - **[World Blueprint](dark-city-blueprint.md)** — the technical spec of Dark City itself.
 - **[This Charter](project-charter.md)** — how the Dark Factory team works.
 - **[AGENTS.md](../AGENTS.md)** — practical quick reference operationalizing this charter.
-- **[Session Start Workflow](../.agent/workflows/session-start.md)** — concrete bootstrap checklist for every session.
+- **[Session Start Workflow](../.agent/workflows/start-session.md)** — concrete bootstrap checklist for every session.
 - **[Backlog](backlog.md)** — phased tickets the team executes.

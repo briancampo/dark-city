@@ -30,4 +30,4 @@
 
 ## Session Handoff
 
-<!-- Paste from the session-handoff-note skill -->
+<!-- Paste from the session-handoff-toolkit skill -->
