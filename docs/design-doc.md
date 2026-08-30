@@ -44,8 +44,6 @@ Two problems have to be solved for a population of LLM-driven citizens to feel a
 
 Dark City's module set, combining PIANO's named modules with Smallville's planning and reflection loop (a fusion that's our own design decision — neither source paper specifies this combination):
 
-Emergence World should be integrated into this where applicable.
-
 | Module               | Role                                                                                                                                                                                                                    |
 | -------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Cognitive Controller | The bottleneck. Makes high-level decisions and broadcasts them to condition every other module.                                                                                                                         |
@@ -105,7 +103,10 @@ Dark City has no built-in administrator, steward, or gatekeeper inside the simul
 Even though governance and safety aren't Dark City's central purpose, a world that degrades into constant chaos isn't useful for observation or believable for a future player, so we still want defense in depth. Four layers, each catching what the others miss:
 
 1. **Model level** — the Soul file and its Core Identity Truths, plus stated world rules in the citizen's system prompt. This is a soft constraint: it can drift under sustained pressure or adversarial context.
-2. **Environment level** — Rust-enforced tool gating (§6). This is a hard constraint: a blocked call is uncallable regardless of what the citizen asserts.
+2. **Environment level** —
+   - Citizen Proposed tools that have not been reviewed and approved by the Tool Review Agent will be in an inactive state and may not move out of that state until the process completes.
+   - Rust-enforced tool gating (§6) Adaptive tool access applies to all tools.
+   - These are hard constraints: a blocked call is uncallable regardless of what the citizen asserts. A proposal is the only option to re-evaluate this.
 3. **Population level** — governance and the tool-proposal pipeline (§7, §9). The population itself can react to and constrain problematic behavior.
 4. **Instrumentation level** — the AWI metrics and audit pipeline below, which catches what the other three layers miss after the fact, especially violations that never touch a gated tool in the first place.
 

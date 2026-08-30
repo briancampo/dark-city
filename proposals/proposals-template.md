@@ -1,27 +1,66 @@
 <!--
-Cross-Boundary Proposal Template — Dark Factory Team Charter §5.
+Cross-Boundary Proposal RFC Template — Dark Factory Team Charter §5.
 Copy this file to /proposals/NNNN-short-slug.md, fill it in, and number sequentially.
-See the cross-boundary-rfc skill for full guidance on the review process.
+See the cross-boundary-rfc-toolkit skill for full guidance on the review process.
 -->
 
 # [NNNN] Short Proposal Title
 
-**Requesting Role:** [role]
+**Requesting Role:** [Role]
 **Date:** YYYY-MM-DD
-**Affects:** [directory/directories outside the requesting role's ownership]
+**Status:** `draft` / `in-review` / `approved` / `rejected`
+**Affects:** [Crates / Directories outside the requesting role's ownership]
+**Related Research Brief:** [Link if originating from a research brief, or N/A]
+**Target Phase / Epic:** [Phase N, Epic X]
 
-## What's Changing
+---
 
-Concrete description of the change.
+## 1. What's Changing
 
-## Why
+<!-- Concrete technical description of the proposed architectural change. -->
 
-What this unblocks or fixes, and why it can't be done inside the requesting role's own directory instead.
+---
 
-## What It Touches Outside My Directory
+## 2. Motivation & Architectural Rationale
 
-Be specific — file paths, not just a subsystem name.
+<!-- What this unblocks, fixes, or enables, and why it cannot be achieved within the requesting role's directory ownership alone. -->
 
-## Status
+---
 
-awaiting / approved / rejected — Steward updates this and links the corresponding decision log entry once resolved.
+## 3. Detailed Cross-Boundary Impact Analysis
+
+<!-- Be specific: list exact crates, files, structs, traits, database migrations, and API contracts touched. -->
+
+- **Crate:** `crates/...`
+  - Changes: ...
+- **Database Migrations:**
+  - Changes: ...
+- **Contracts & DTOs:**
+  - Changes: ...
+
+---
+
+## 4. Concurrency, Invariants & Multi-Tenancy
+
+- **Bevy Schedule Safety:** [Confirm non-blocking main schedule invariant]
+- **Multi-Tenant Isolation:** [Confirm world_id partitioning on state and queries]
+- **Error Handling:** [Confirm explicit error enums]
+
+---
+
+## 5. Alternatives Considered
+
+| Alternative | Trade-offs | Reason Rejected |
+| :---------- | :--------- | :-------------- |
+| Option A    | ...        | ...             |
+| Option B    | ...        | ...             |
+
+---
+
+## 6. Integration & Backlog Sequencing Plan
+
+<!-- How and when will this proposal be integrated into the project backlog? -->
+
+- **Decision ADR:** Target `decisions/NNNN-*.md`
+- **World Blueprint Updates:** Section §...
+- **Backlog Deliverables:** Stories/Tasks to create in Phase N.

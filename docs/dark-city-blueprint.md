@@ -246,6 +246,7 @@ fn recency_score(hours_since_last_retrieval: f32) -> f32 {
     0.995_f32.powf(hours_since_last_retrieval)
 }
 ```
+
 Postgres supplies the relevance-ranked candidate pool; recency and final re-ranking happen application-side, since recency depends on "now" at query time rather than any stored value:
 
 ```sql
@@ -383,6 +384,10 @@ This validation runs in the Axum backend, never in the inference gateway and nev
 
 Citizen-authored tools follow: draft (code + schema, written by the proposing citizen) → governance proposal (§6) → on passage, runtime registration into the live `ToolDefinition` registry, immediately available to the population. This is Phase 3 scope per the Foundations roadmap, but `ToolDefinition` above is already shaped to accept a runtime-registered entry, so no schema migration is needed when it's built.
 
+## 5.4 Code Review Gate for Citizen-Authored Tools
+
+A submitted tool that requires code first passes a static/compile check (catches malformed or trivially unsafe code cheaply); what survives is then reviewed by a new **Tool Review Agent**. The new tool may only be activated once approved the Tool Review Agent has provided an assessment to the Steward and User, and any remediations have been completed. Tools will remain in an inactive state until that process is completed. Tools that are rejected will block registration, and its findings are surfaced back to the proposing citizen through ordinary in-world channels (a system message, comparable to how proposal rejection is already communicated).
+
 ## 6. Governance System
 
 ```sql
@@ -407,7 +412,7 @@ CREATE TABLE votes (
 );
 ```
 
-`submit_proposal` and `vote_on_proposal` are both location-gated to the governance venue (§5.2). A proposal passes when for-votes reach the threshold (70% to start) _among votes cast_, not among total population — absence and abstention are tracked separately from opposition. Passage triggers a category-specific handler: `rule_change` updates the in-world constitution text; `new_tool` registers a `ToolDefinition`; `resource_allocation` and `sanction` write to the ledger (§7). No part of this is assumed to be the only possible configuration — venue, threshold, and even whether governance is enabled at all are scenario-level settings (§10.1). Per [Decision 0003](../decisions/0003-multi-tenant-world-instances.md), governance is also fully isolated per world instance by construction — a proposal and its votes are scoped to `world_id`, so one world's constitution or vote outcomes can never influence another's.
+`submit_proposal` and `vote_on_proposal` are both location-gated to the governance venue (§5.2). A proposal passes when for-votes reach the threshold (70% to start) _among votes cast_, not among total population — absence and abstention are tracked separately from opposition. Passage triggers a category-specific handler: `rule_change` updates the in-world constitution text; `new_tool` registers a `ToolDefinition` in an inactive state pending approval from the Tool Review Agent (see §5.4 and Decision 0006); `resource_allocation` and `sanction` write to the ledger (§7). No part of this is assumed to be the only possible configuration — venue, threshold, and even whether governance is enabled at all are scenario-level settings (§10.1). Per [Decision 0003](../decisions/0003-multi-tenant-world-instances.md), governance is also fully isolated per world instance by construction — a proposal and its votes are scoped to `world_id`, so one world's constitution or vote outcomes can never influence another's.
 
 ## 7. Economic System
 
@@ -494,6 +499,8 @@ SELECT COUNT(*) FROM proposals WHERE world_id = $1 AND category = 'rule_change' 
 ```
 
 Every AWI query is scoped by `world_id` — shown above on M9 as the pattern all eleven follow. M1–M7 and M11 follow the same pattern against `citizens`, `votes`, `citizen_relationships`, `proposals`, and the tool registry, refreshed on a cadence (e.g., hourly simulated time) and surfaced on the per-world AWI dashboard (`GET /api/v1/worlds/:world_id/awi/dashboard`, §12). This makes cross-world comparison (Backlog 4.2.2) a matter of calling the same endpoint against two `world_id`s rather than a bespoke query.
+
+M2/M10-style queries may optionally GROUP BY the acting citizen's model_name (already present per-citizen via §11's roster assignment) when a world is heterogeneous — no schema change required, since model_name is already a per-citizen roster value, not a new column.
 
 **M2 is citizen-culpability-only, by construction ([Decision 0004](../decisions/0004-observation-and-world-event-capture.md)).** M2 measures cumulative successful hard violations committed by citizens. No `world_events` row is ever M2-eligible — not a scripted disaster, not a threshold crossing, and not a citizen-triggered row either, since that row's `origin_citizen_id` (§4.1) is provenance only; the causing tool call is already separately logged in `simulation_events`, and that's the row M2 counts.
 

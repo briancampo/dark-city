@@ -6,7 +6,6 @@
 set -e
 trap 'echo -e "\n🚨 Error occurred on line $LINENO. Agent/User: Please review the output above to diagnose the issue." >&2' ERR
 
-# --- Color Formatting ---
 BOLD='\033[1m'
 GREEN='\033[0;32m'
 BLUE='\033[0;34m'
@@ -17,13 +16,7 @@ NC='\033[0m'
 
 # --- Root Discovery ---
 get_project_root() {
-    local git_common
-    git_common=$(git rev-parse --git-common-dir 2>/dev/null || true)
-    if [ -n "$git_common" ]; then
-        PROJECT_ROOT=$(cd "$git_common/.." && pwd -P)
-    else
-        PROJECT_ROOT=$(git rev-parse --show-toplevel 2>/dev/null || pwd -P)
-    fi
+    PROJECT_ROOT=$(git rev-parse --show-toplevel 2>/dev/null || pwd -P)
 }
 
 get_project_root
@@ -66,14 +59,23 @@ DEFAULT_BASE_BRANCH="${DEFAULT_BASE_BRANCH:-main}"
 
 # Discover worktrees directory
 get_worktree_base_dir() {
+    local common_root=""
+    local git_common
+    git_common=$(git rev-parse --git-common-dir 2>/dev/null || true)
+    if [ -n "$git_common" ]; then
+        common_root=$(cd "$git_common/.." && pwd -P)
+    else
+        common_root="$PROJECT_ROOT"
+    fi
+
     if [ -n "$WORKTREES_DIR" ]; then
         WORKTREE_BASE="$WORKTREES_DIR"
+    elif [ -d "$(dirname "$common_root")/worktrees/${REPO_NAME:-dark-city}" ]; then
+        WORKTREE_BASE="$(dirname "$common_root")/worktrees/${REPO_NAME:-dark-city}"
+    elif [ -d "$(dirname "$common_root")/worktrees" ]; then
+        WORKTREE_BASE="$(dirname "$common_root")/worktrees/${REPO_NAME:-dark-city}"
     elif [ -d "$(dirname "$PROJECT_ROOT")/worktrees/${REPO_NAME:-dark-city}" ]; then
         WORKTREE_BASE="$(dirname "$PROJECT_ROOT")/worktrees/${REPO_NAME:-dark-city}"
-    elif [ -d "$(dirname "$PROJECT_ROOT")/worktrees" ]; then
-        WORKTREE_BASE="$(dirname "$PROJECT_ROOT")/worktrees/${REPO_NAME:-dark-city}"
-    elif [ -d "$(dirname "$PROJECT_ROOT")/worktrees/$(basename "$PROJECT_ROOT")" ]; then
-        WORKTREE_BASE="$(dirname "$PROJECT_ROOT")/worktrees/$(basename "$PROJECT_ROOT")"
     else
         WORKTREE_BASE="$PROJECT_ROOT/.worktrees"
     fi
@@ -146,6 +148,19 @@ resolve_issue_number() {
     fi
 }
 
+# Discover main repo root
+get_main_repo_root() {
+    local git_common
+    git_common=$(git rev-parse --git-common-dir 2>/dev/null || true)
+    if [ -n "$git_common" ]; then
+        MAIN_REPO_ROOT=$(cd "$git_common/.." && pwd -P)
+    else
+        MAIN_REPO_ROOT=$(git rev-parse --show-toplevel 2>/dev/null || pwd -P)
+    fi
+}
+
+get_main_repo_root
+
 # --- Helper: Project Board ID Resolution (Safe Fallback) ---
 resolve_project_ids() {
     local issue_num="$1"
@@ -155,6 +170,11 @@ resolve_project_ids() {
 
     if [ -z "$GH_PROJECT_NUMBER" ] || [ -z "$GH_PROJECT_OWNER" ]; then
         return 0
+    fi
+
+    # Extract Project ID if not set
+    if [ -z "$GH_PROJECT_ID" ]; then
+        GH_PROJECT_ID=$(gh project view "$GH_PROJECT_NUMBER" --owner "$GH_PROJECT_OWNER" --format json --jq .id 2>/dev/null || true)
     fi
 
     # Check if project exists and fetch status field
@@ -176,7 +196,7 @@ except: pass
 
     # Get Item ID for this issue
     local item_list
-    item_list=$(gh project item-list "$GH_PROJECT_NUMBER" --owner "$GH_PROJECT_OWNER" --format json --query "$issue_num" -L 1000 2>/dev/null || true)
+    item_list=$(gh project item-list "$GH_PROJECT_NUMBER" --owner "$GH_PROJECT_OWNER" --format json -L 1000 2>/dev/null || true)
     if [ -n "$item_list" ]; then
         ITEM_ID=$(echo "$item_list" | python3 -c "
 import sys, json
@@ -189,7 +209,21 @@ except: pass
 ")
     fi
 
-    if [ -n "$STATUS_FIELD_ID" ] && [ -n "$ITEM_ID" ]; then
+    # If item not on project board, add it
+    if [ -z "$ITEM_ID" ]; then
+        local issue_url="https://github.com/${REPO_NAME_WITH_OWNER}/issues/${issue_num}"
+        local add_resp
+        add_resp=$(gh project item-add "$GH_PROJECT_NUMBER" --owner "$GH_PROJECT_OWNER" --url "$issue_url" --format json 2>/dev/null || true)
+        ITEM_ID=$(echo "$add_resp" | python3 -c "
+import sys, json
+try:
+    d = json.load(sys.stdin)
+    print(d.get('id', ''))
+except: pass
+")
+    fi
+
+    if [ -n "$STATUS_FIELD_ID" ] && [ -n "$ITEM_ID" ] && [ -n "$GH_PROJECT_ID" ]; then
         HAS_PROJECT_BOARD=true
     fi
 }
@@ -340,17 +374,29 @@ else:
     get_project_root
     cd "$PROJECT_ROOT"
 
-    echo -e "${BLUE}Preparing git branch '$branch_name'...${NC}"
-    if ! git rev-parse --verify "$branch_name" >/dev/null 2>&1; then
-        if git rev-parse --verify "origin/$branch_name" >/dev/null 2>&1; then
-            echo "Checking out remote branch 'origin/$branch_name'..."
-            git branch "$branch_name" "origin/$branch_name"
-        else
-            echo "Creating branch '$branch_name' from '$DEFAULT_BASE_BRANCH'..."
-            git branch "$branch_name" "$DEFAULT_BASE_BRANCH"
+    echo -e "${BLUE}Setting up development branch '$branch_name' on GitHub and locally...${NC}"
+    # Try creating linked development branch on GitHub via gh issue develop
+    if gh issue develop "$issue_num" --name "$branch_name" --base "$DEFAULT_BASE_BRANCH" -R "$REPO_NAME_WITH_OWNER" >/dev/null 2>&1; then
+        echo -e "${GREEN}✓ Created linked development branch '$branch_name' for issue #$issue_num on GitHub.${NC}"
+        git fetch origin "$branch_name" >/dev/null 2>&1 || true
+        if ! git rev-parse --verify "$branch_name" >/dev/null 2>&1; then
+            git branch --track "$branch_name" "origin/$branch_name" >/dev/null 2>&1 || git branch "$branch_name" "origin/$branch_name" >/dev/null 2>&1 || true
         fi
     else
-        echo "Branch '$branch_name' already exists."
+        # Fallback: create locally and push to remote
+        if ! git rev-parse --verify "$branch_name" >/dev/null 2>&1; then
+            if git rev-parse --verify "origin/$branch_name" >/dev/null 2>&1; then
+                echo "Checking out remote branch 'origin/$branch_name'..."
+                git branch "$branch_name" "origin/$branch_name"
+            else
+                echo "Creating branch '$branch_name' from '$DEFAULT_BASE_BRANCH'..."
+                git branch "$branch_name" "$DEFAULT_BASE_BRANCH"
+            fi
+        else
+            echo "Branch '$branch_name' already exists locally."
+        fi
+        echo -e "${BLUE}Pushing branch '$branch_name' to origin...${NC}"
+        git push -u origin "$branch_name" >/dev/null 2>&1 || true
     fi
 
     # Create worktree
@@ -361,8 +407,8 @@ else:
         echo "Worktree directory already exists at $worktree_path."
     fi
 
-    # Update status to In Progress on Project Board if available
-    set_status "$issue_num" "In Progress" >/dev/null 2>&1 || true
+    # Update status to In progress on Project Board if available
+    set_status "$issue_num" "In progress" >/dev/null 2>&1 || true
 
     echo -e "\n${BOLD}${GREEN}✅ Task setup complete!${NC}"
     echo -e "   ${BOLD}Issue:${NC} #$issue_num - $issue_title"
@@ -391,6 +437,22 @@ set_status() {
         return 0
     fi
 
+    # Normalize status names (e.g. 'review' -> 'In review', 'progress' -> 'In progress')
+    local normalized_status="$status_name"
+    local lower_status
+    lower_status=$(echo "$status_name" | tr '[:upper:]' '[:lower:]' | tr '-' ' ')
+    if [ "$lower_status" = "review" ] || [ "$lower_status" = "in review" ]; then
+        normalized_status="In review"
+    elif [ "$lower_status" = "progress" ] || [ "$lower_status" = "in progress" ]; then
+        normalized_status="In progress"
+    elif [ "$lower_status" = "ready" ]; then
+        normalized_status="Ready"
+    elif [ "$lower_status" = "backlog" ]; then
+        normalized_status="Backlog"
+    elif [ "$lower_status" = "done" ] || [ "$lower_status" = "closed" ]; then
+        normalized_status="Done"
+    fi
+
     # Resolve Option ID for status
     local option_id
     option_id=$(gh project field-list "$GH_PROJECT_NUMBER" --owner "$GH_PROJECT_OWNER" --format json 2>/dev/null | python3 -c "
@@ -401,15 +463,15 @@ try:
     f = next((x for x in fields if isinstance(x, dict) and x.get('name') == 'Status'), None)
     if f:
         opts = f.get('options', [])
-        target = next((o for o in opts if isinstance(o, dict) and o.get('name', '').lower() == '$status_name'.lower()), None)
+        target = next((o for o in opts if isinstance(o, dict) and (o.get('name', '').lower() == '$normalized_status'.lower() or o.get('name', '').lower() == '$status_name'.lower())), None)
         if target: print(target.get('id', ''))
 except: pass
 ")
 
     if [ -n "$option_id" ] && [ -n "$ITEM_ID" ] && [ -n "$GH_PROJECT_ID" ]; then
-        echo -e "${BLUE}Updating project status of #$issue_num to '$status_name'...${NC}"
+        echo -e "${BLUE}Updating Project #$GH_PROJECT_NUMBER status of #$issue_num to '$normalized_status'...${NC}"
         gh project item-edit --id "$ITEM_ID" --project-id "$GH_PROJECT_ID" --field-id "$STATUS_FIELD_ID" --single-select-option-id "$option_id" >/dev/null 2>&1 || true
-        echo -e "${GREEN}✅ Status updated to '$status_name'.${NC}"
+        echo -e "${GREEN}✅ Status updated to '$normalized_status'.${NC}"
     else
         echo -e "${YELLOW}Project option for '$status_name' could not be resolved.${NC}"
     fi
@@ -590,9 +652,9 @@ pr_create() {
     echo -e "\n${BOLD}${GREEN}✅ PR #$pr_num created successfully!${NC}"
     echo -e "   URL: ${CYAN}$pr_url${NC}"
 
-    # Move to Review on project board
+    # Move to In review on project board
     if [ -n "$issue_num" ]; then
-        set_status "$issue_num" "Review" >/dev/null 2>&1 || true
+        set_status "$issue_num" "In review" >/dev/null 2>&1 || true
     fi
 }
 
@@ -606,7 +668,7 @@ teardown_issue() {
     local slug="${branch_slug:-$INFERRED_SLUG}"
     local branch_name="${INFERRED_BRANCH:-$slug}"
 
-    get_project_root
+    get_main_repo_root
     get_worktree_base_dir
 
     # Find worktree directory
@@ -615,14 +677,14 @@ teardown_issue() {
         target_worktree="$WORKTREE_BASE/$slug"
     elif [ -d "$WORKTREE_BASE/$issue_num-$slug" ]; then
         target_worktree="$WORKTREE_BASE/$issue_num-$slug"
-    elif [ -d "$PROJECT_ROOT/.worktrees/$slug" ]; then
-        target_worktree="$PROJECT_ROOT/.worktrees/$slug"
-    elif [ -d "$PROJECT_ROOT/.worktrees/$issue_num-$slug" ]; then
-        target_worktree="$PROJECT_ROOT/.worktrees/$issue_num-$slug"
+    elif [ -d "$MAIN_REPO_ROOT/.worktrees/$slug" ]; then
+        target_worktree="$MAIN_REPO_ROOT/.worktrees/$slug"
+    elif [ -d "$MAIN_REPO_ROOT/.worktrees/$issue_num-$slug" ]; then
+        target_worktree="$MAIN_REPO_ROOT/.worktrees/$issue_num-$slug"
     fi
 
-    echo -e "${BLUE}Switching to project root: $PROJECT_ROOT${NC}"
-    cd "$PROJECT_ROOT"
+    echo -e "${BLUE}Switching to repository root: $MAIN_REPO_ROOT${NC}"
+    cd "$MAIN_REPO_ROOT"
 
     if [ -n "$target_worktree" ] && [ -d "$target_worktree" ]; then
         echo -e "${BLUE}Removing git worktree at $target_worktree...${NC}"
@@ -669,6 +731,35 @@ finish_issue() {
 
     echo -e "${BOLD}${CYAN}=== Finalizing Task & PR for $branch_name ===${NC}"
 
+    # Early exit check: Verify that an open Pull Request exists before making ANY changes
+    local pr_data
+    pr_data=$(gh pr view --json number,mergeable,state,url --jq '{number: .number, mergeable: .mergeable, state: .state, url: .url}' 2>/dev/null || true)
+    
+    if [ -z "$pr_data" ] || [ "$pr_data" = "null" ]; then
+        echo -e "${RED}🚨 Error: No Pull Request found for branch '$branch_name'.${NC}" >&2
+        echo -e "   Cannot finish task without an existing Pull Request." >&2
+        echo -e "   Please open a PR first via: ${CYAN}scripts/gh-task-ops.sh pr-create${NC}" >&2
+        echo -e "   Once reviewed and approved via /review-pr, run finish to merge and clean up." >&2
+        exit 1
+    fi
+
+    local pr_number
+    pr_number=$(echo "$pr_data" | python3 -c "import sys, json; print(json.load(sys.stdin).get('number', ''))")
+    local mergeable
+    mergeable=$(echo "$pr_data" | python3 -c "import sys, json; print(json.load(sys.stdin).get('mergeable', ''))")
+    local pr_state
+    pr_state=$(echo "$pr_data" | python3 -c "import sys, json; print(json.load(sys.stdin).get('state', ''))")
+
+    if [ "$pr_state" != "OPEN" ]; then
+        echo -e "${RED}🚨 Error: PR #$pr_number is not in OPEN state (current state: $pr_state). Cannot perform finish on non-open PR.${NC}" >&2
+        exit 1
+    fi
+
+    if [ "$mergeable" = "CONFLICTING" ]; then
+        echo -e "${RED}🚨 Error: PR #$pr_number has merge conflicts with base branch. Please resolve conflicts before finishing.${NC}" >&2
+        exit 1
+    fi
+
     # Commit any uncommitted changes
     if [ -n "$(git status --porcelain)" ]; then
         echo -e "${BLUE}Staging and committing remaining changes...${NC}"
@@ -679,34 +770,16 @@ finish_issue() {
     echo -e "${BLUE}Pushing latest changes to origin...${NC}"
     git push -u origin HEAD
 
-    # Check for linked PR
-    local pr_data
-    pr_data=$(gh pr view --json number,mergeable,state,url --jq '{number: .number, mergeable: .mergeable, state: .state, url: .url}' 2>/dev/null || true)
-    
-    if [ -n "$pr_data" ] && [ "$pr_data" != "null" ]; then
-        local pr_number
-        pr_number=$(echo "$pr_data" | python3 -c "import sys, json; print(json.load(sys.stdin).get('number', ''))")
-        local mergeable
-        mergeable=$(echo "$pr_data" | python3 -c "import sys, json; print(json.load(sys.stdin).get('mergeable', ''))")
-
-        if [ "$mergeable" = "CONFLICTING" ]; then
-            echo -e "${RED}🚨 Error: PR #$pr_number has merge conflicts with base branch. Please resolve conflicts before finishing.${NC}" >&2
-            exit 1
-        fi
-
-        echo -e "${BLUE}Merging PR #$pr_number (Squash & Merge)...${NC}"
-        if gh pr merge "$pr_number" --squash -R "$REPO_NAME_WITH_OWNER"; then
-            echo -e "${GREEN}✓ PR #$pr_number merged successfully.${NC}"
-        else
-            echo -e "${RED}🚨 Error: Failed to merge PR #$pr_number. Check CI status and branch protections.${NC}" >&2
-            exit 1
-        fi
-
-        if [ -n "$issue_num" ]; then
-            set_status "$issue_num" "Done" >/dev/null 2>&1 || true
-        fi
+    echo -e "${BLUE}Merging PR #$pr_number (Squash & Merge)...${NC}"
+    if gh pr merge "$pr_number" --squash -R "$REPO_NAME_WITH_OWNER"; then
+        echo -e "${GREEN}✓ PR #$pr_number merged successfully.${NC}"
     else
-        echo -e "${YELLOW}Warning: No open PR found for branch '$branch_name'. Skipping merge step.${NC}"
+        echo -e "${RED}🚨 Error: Failed to merge PR #$pr_number. Check CI status and branch protections.${NC}" >&2
+        exit 1
+    fi
+
+    if [ -n "$issue_num" ]; then
+        set_status "$issue_num" "Done" >/dev/null 2>&1 || true
     fi
 
     # Teardown worktree and branch
@@ -714,13 +787,17 @@ finish_issue() {
 
     # Sync main
     sync_main
-    echo -e "\n${BOLD}${GREEN}🎉 Lifecycle complete! Task finalized and main synced.${NC}"
+
+    get_main_repo_root
+    echo -e "\n${BOLD}${GREEN}🎉 Lifecycle complete! Task finalized, PR merged, and main synced.${NC}"
+    echo -e "To return to the main workspace directory, run:"
+    echo -e "   ${CYAN}cd $MAIN_REPO_ROOT${NC}\n"
 }
 
 # --- Command: sync ---
 sync_main() {
-    get_project_root
-    cd "$PROJECT_ROOT"
+    get_main_repo_root
+    cd "$MAIN_REPO_ROOT"
     local current_branch
     current_branch=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || true)
     
@@ -752,6 +829,9 @@ case "$1" in
     check|verify)
         run_checks
         ;;
+    scaffold-review)
+        "$PROJECT_ROOT/scripts/gh-issue-ops.sh" scaffold-review "$2"
+        ;;
     pr-create)
         pr_create "$2" "$3" "$4"
         ;;
@@ -778,6 +858,7 @@ case "$1" in
         echo "  assign <issue_id> [slug]      Assign issue to @me, create branch, and setup isolated worktree"
         echo "  check                         Run full Dark Factory DoD gates (fmt, clippy, tests, xtask check)"
         echo "  status <issue_id> <status>    Update issue status on GitHub Project board (e.g. 'In Progress', 'Done')"
+        echo "  scaffold-review [issue_id]    Scaffold review brief in working/briefs/<id>-review.md"
         echo "  pr-create [options]           Push branch, run DoD checks, and create linked PR with handoff template"
         echo "  pr-status                     Display PR state, review status, and CI check results"
         echo "  finish [issue_id] [slug]      Commit, push, merge PR (squash), mark Done, teardown worktree, sync main"
@@ -785,14 +866,15 @@ case "$1" in
         echo "  sync                          Switch to main branch at repository root and pull latest changes"
         echo ""
         echo -e "${BOLD}Contextual Inference:${NC}"
-        echo "  When executed from inside an active task worktree or branch, 'info', 'pr-create', 'pr-status',"
-        echo "  'teardown', and 'finish' automatically detect the issue number and branch slug from the context."
+        echo "  When executed from inside an active task worktree or branch, 'info', 'scaffold-review', 'pr-create',"
+        echo "  'pr-status', 'teardown', and 'finish' automatically detect the issue number and branch slug from context."
         echo ""
         echo -e "${BOLD}Examples:${NC}"
         echo "  $0 list                                   # View open backlog issues"
         echo "  $0 info 1.1.0                             # View details & criteria for ticket [1.1.0]"
         echo "  $0 assign 2                               # Assigns #2 and creates worktree"
         echo "  $0 check                                  # Runs fmt, clippy, tests, and xtask"
+        echo "  $0 scaffold-review                        # Generates review brief from within worktree"
         echo "  $0 pr-create                              # Runs checks and opens PR from worktree"
         echo "  $0 finish                                 # Squash-merges PR, removes worktree, syncs main"
         echo ""

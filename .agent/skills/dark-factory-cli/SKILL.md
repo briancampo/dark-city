@@ -44,9 +44,10 @@ cd /home/brian/dev/ai/worktrees/dark-city/1.1.0-containerized-backend-deployment
 scripts/gh-task-ops.sh check               # Runs fmt, clippy (-D warnings), nextest, and xtask
 ```
 
-### D. Create Pull Request
+### D. Review Brief & Pull Request
 
 ```bash
+scripts/gh-task-ops.sh scaffold-review     # Scaffolds working/briefs/<id>-review.md for independent PR review
 scripts/gh-task-ops.sh pr-create           # Validates DoD checks, pushes branch, and opens PR
 scripts/gh-task-ops.sh pr-status           # Inspect PR checks and review status
 ```
@@ -69,14 +70,16 @@ Epic ([1.1] Foundational Infrastructure)
       └── Task (Sub-task: Dockerfile & Healthcheck)
 ```
 
-### B. Scaffold a Mission Brief from Backlog
+### B. Scaffold & Enrich a Mission Brief
 
 ```bash
 scripts/gh-issue-ops.sh scaffold-brief 1.1.2
 ```
 
 _Generates `working/briefs/1.1.2-brief.md` containing Blueprint links, Gherkin criteria, worktree path, and `/session-start` bootstrap prompt._
-This document is the basic starting point and should be enhanced with story and task specific information to guide the next agent.  
+
+> [!IMPORTANT]
+> The scaffolded brief is an initial baseline. Before dispatching to the developer agent, the **Steward** and **Tech Lead** must review and enrich the brief with target crates, architectural invariants, concurrency constraints, and non-vacuous test expectations.
 
 ### C. Create Story & Link to Parent Epic
 
@@ -89,8 +92,8 @@ scripts/gh-issue-ops.sh create \
   --title "[Task] Dockerfile multi-stage build" \
   --body-file working/tasks/dockerfile-task.md \
   --parent 2 \
-  --label "infrastructure,task,system-architect" \
-  --status "Backlog" \
+  --label "infrastructure,task,domain:backend" \
+  --status "Ready" \
   --size "S" \
   --estimate 2
 ```
@@ -108,7 +111,7 @@ scripts/gh-issue-ops.sh link 3 2           # Link issue #2 as sub-issue of Epic 
 ```bash
 scripts/gh-issue-ops.sh fields             # Inspect Project #2 custom fields and single-select options
 scripts/gh-issue-ops.sh iterations         # List active sprint / iteration IDs
-scripts/gh-issue-ops.sh update 2 --status "In progress" --size S --estimate 3
+scripts/gh-issue-ops.sh update 2 --status "Ready" --size S --estimate 3
 ```
 
 ---
@@ -117,5 +120,6 @@ scripts/gh-issue-ops.sh update 2 --status "In progress" --size S --estimate 3
 
 1. **Strict Worktree Boundary:** Never edit files or commit outside your assigned worktree path.
 2. **Quality Gate Requirement:** Always run `scripts/gh-task-ops.sh check` before opening a PR.
-3. **Dual-Gate PR Process:** All PRs require Steward and Tech Lead review sign-offs per Charter §7.
-4. **Clean Handoffs:** Use `scripts/gh-task-ops.sh pr-create` to automatically populate the Definition of Done checklist and handoff template.
+3. **Session Completion Outputs:** Always append to `logs/work-log.md` and scaffold `working/briefs/<id>-review.md`.
+4. **Dual-Gate PR Process:** All PRs require independent Tech Lead review ([`/review-pr`](../../workflows/review-pr.md)) and Steward process sign-off per Charter §7 before passing to the user for validation and merge.
+5. **Clean Handoffs:** Use `scripts/gh-task-ops.sh pr-create` to automatically populate the Definition of Done checklist and handoff template.

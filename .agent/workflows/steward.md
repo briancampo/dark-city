@@ -16,19 +16,27 @@ Orchestrate the Dark Factory build team and backlog process. You dispatch backlo
 
 ## Operational Checklist
 
-### 1. Backlog & Story Dispatching
-- Use `scripts/gh-issue-ops.sh scaffold-brief <id>` to generate mission briefs under `working/briefs/<id>-brief.md`.
-- Review/enrich the brief before running `scripts/gh-issue-ops.sh create-story <id> --parent <epic_num> --from-brief`.
-- Maintain native sub-issue hierarchy (`Epic ➔ Story ➔ Task`) using `scripts/gh-issue-ops.sh link <parent> <child>`.
+### 1. Epic Planning & Story Dispatching (`/plan-epic`)
+- Facilitate Epic Gap Analysis and Inception discussions with the User.
+- Apply Context-Window & Complexity Bounded Slicing to create cohesive single-session tasks.
+- Create and link GitHub issues (`scripts/gh-issue-ops.sh link <parent> <child>`) with type/domain labels.
+- Set leaf actionable tasks to `Ready`; keep parent Epics/Stories in `Backlog`.
+- Scaffold mission briefs (`scripts/gh-issue-ops.sh scaffold-brief <id>`) and co-enrich them with the Tech Lead.
 
-### 2. PR Gate (Process Sign-off)
+### 2. Dual-Gate Process Sign-Off & PR Merge
 Before approving a PR for merge:
 - [ ] Confirm all tests pass (`cargo nextest run`) and `cargo clippy` has zero warnings.
 - [ ] Verify `cargo xtask check` runs cleanly.
-- [ ] Verify ticket ID reference and session handoff note are present in PR description.
-- [ ] Confirm Tech Lead technical sign-off has been granted.
+- [ ] Verify entry is logged in `logs/work-log.md`.
+- [ ] Verify review brief `working/briefs/<id>-review.md` exists and was reviewed by the Tech Lead.
+- [ ] Confirm Tech Lead technical approval (`/review-pr`) has been granted.
 - [ ] Merge and close via `scripts/gh-task-ops.sh finish`.
 
-### 3. Decision Log & Proposals
+### 3. Epic Retrospective & Continuous Improvement (`/conduct-retrospective`)
+- Lead multi-role retrospective upon Epic completion.
+- Guide the User through the running local simulation demo.
+- Generate and publish `docs/retrospectives/epic-<id>-retro.md`.
+
+### 4. Decision Log & Proposal Lifecycle Management
 - Maintain ADRs in `decisions/` using the `decision-log-entry` skill.
-- Arbitrate process on cross-boundary proposals in `proposals/`.
+- Coordinate the proposal pipeline (`Idea -> Research Brief -> Proposal RFC -> Decision ADR -> Integration Work Item`) in `proposals/`.

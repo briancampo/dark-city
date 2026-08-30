@@ -1,9 +1,9 @@
 ---
-name: pr-definition-of-done
-description: Use as a self-review checklist before opening any Dark Factory PR, and by the Steward when gating a PR for merge — Charter §7's Definition of Done. Trigger on "is this PR ready," "self-review before I open a PR," "check this against the Definition of Done," or "gate this PR."
+name: pr-gate-toolkit
+description: Use as a self-review checklist before opening any Dark Factory PR, and by the Steward when gating a PR for merge — Charter §7's Definition of Done. Trigger on "pr-gate-toolkit", "is this PR ready," "self-review before I open a PR," "check this against the Definition of Done," or "gate this PR."
 ---
 
-# PR Definition of Done
+# PR Gate Toolkit (`pr-gate-toolkit`)
 
 Run every item before opening a PR (self-review) or before approving one (Steward gate). All of them, every time — this list is the Charter §7 merge gate, not a suggestion.
 

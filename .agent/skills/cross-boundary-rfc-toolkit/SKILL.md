@@ -1,9 +1,9 @@
 ---
-name: cross-boundary-rfc
-description: Use when a Dark Factory agent needs to change something outside its own directory ownership (Charter §3.1) — including any Cargo.toml or workspace-level dependency change, regardless of size. Trigger on "I need to touch someone else's directory," "this requires a workspace dependency change," "draft an RFC," or "open a cross-boundary proposal."
+name: cross-boundary-rfc-toolkit
+description: Use when a Dark Factory agent needs to change something outside its own directory ownership (Charter §3.1) — including any Cargo.toml or workspace-level dependency change, regardless of size. Trigger on "cross-boundary-rfc-toolkit", "I need to touch someone else's directory," "this requires a workspace dependency change," "draft an RFC," or "open a cross-boundary proposal."
 ---
 
-# Cross-Boundary RFC
+# Cross-Boundary RFC Toolkit (`cross-boundary-rfc-toolkit`)
 
 ## When This Applies (Charter §5)
 

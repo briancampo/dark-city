@@ -34,7 +34,7 @@ MANDATORY WORKSPACE RULE: Verify that your working directory is exactly {WORKTRE
 
 Pull the ticket's title, goal, and acceptance criteria from docs/backlog.md and your GitHub issue.
 
-Run Session Start Workflow (.agent/workflows/session-start.md) in full, starting at step 1. Stop at step 7 and report back to the Tech Lead (technical) or Steward (scope) if you hit a genuine ambiguity — don't guess past it.
+Run Session Start Workflow (.agent/workflows/start-session.md) in full, starting at step 1. Stop at step 7 and report back to the Tech Lead (technical) or Steward (scope) if you hit a genuine ambiguity — don't guess past it.
 ```
 
 ## 2. Resume an In-Progress Ticket
@@ -88,7 +88,7 @@ Propose a dispatch list: which stories are ready now, who each goes to, GitHub i
 ```markdown
 You are the Steward, gating {PR_REFERENCE} against the Definition of Done process checks.
 
-Use the pr-definition-of-done skill and check every line item in the Steward Gate explicitly — don't summarize, show the check against each one individually (tests, clippy, xtask, fmt, relative markdown links, tests for new logic, doc comments, handoff note).
+Use the pr-gate-toolkit skill and check every line item in the Steward Gate explicitly — don't summarize, show the check against each one individually (tests, clippy, xtask, fmt, relative markdown links, tests for new logic, doc comments, handoff note).
 
 Flag anything unchecked as a blocker, not a suggestion. If everything passes, confirm process approval for merge.
 ```
@@ -102,7 +102,7 @@ Flag anything unchecked as a blocker, not a suggestion. If everything passes, co
 ```markdown
 You are the {ROLE} for the Dark Factory team. Your current ticket needs a change outside your own directory ownership: {WHAT_AND_WHY}.
 
-Use the cross-boundary-rfc skill to draft the proposal in proposals/. Name the affected directory's owner(s) and Tech Lead per Charter §3.1 and §5 as reviewers, and note the open RFC in your session handoff so it's visible even if it isn't resolved before this session ends.
+Use the cross-boundary-rfc-toolkit skill to draft the proposal in proposals/. Name the affected directory's owner(s) and Tech Lead per Charter §3.1 and §5 as reviewers, and note the open RFC in your session handoff so it's visible even if it isn't resolved before this session ends.
 ```
 
 ## 6. Phase Run & Findings Write-Up
@@ -119,7 +119,7 @@ Read AGENTS.md and .agent/roles/qa-instrumentation-agent.md if not already in co
 
 Run the Phase {PHASE} scenario for a sustained simulated period. Write up findings per this ticket's acceptance criteria — cognitive-loop believability, concurrency-bridge stability, and any AWI trends available at this phase.
 
-Any parameter the run suggests needs tuning (reflection threshold, recency decay, tool catalog size, etc.) gets its own decision log entry, not just a mention in the write-up — use the decision-log-entry skill for each one.
+Any parameter the run suggests needs tuning (reflection threshold, recency decay, tool catalog size, etc.) gets its own decision log entry, not just a mention in the write-up — use the decision-log-toolkit skill for each one.
 ```
 
 ## 7. PR Gate Review — Tech Lead (Technical & Architectural)
@@ -133,14 +133,15 @@ You are the Tech Lead for the Dark Factory team, conducting architectural review
 
 Read AGENTS.md and .agent/roles/tech-lead.md if not already in context.
 
-Use the pr-definition-of-done skill to evaluate the Tech Lead Gate:
+Use the /review-pr workflow and pr-review-toolkit skill to evaluate the PR across the 5 dimensions of quality:
 
 - Verify alignment with World Blueprint and Design Foundations (no speculative generality).
 - Verify config-over-constants (no hardcoded state disguised as dynamic configs).
 - Verify type contracts across crate boundaries (schemas, DTOs, SQL models).
 - Verify async and Bevy thread safety (no blocking calls in ECS systems).
+- Guarantee 100% test integrity and regression protection.
 
-Provide clear architectural sign-off or detailed actionable blocking feedback.
+Provide clear architectural sign-off or detailed actionable blocking feedback via the review template.
 ```
 
 ## 8. Tech Lead — Ambiguity & Architecture Escalation
