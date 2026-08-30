@@ -337,6 +337,31 @@ for line in lines:
                 }
                 break
 
+if not found:
+    import subprocess
+    try:
+        res = subprocess.run(["gh", "issue", "view", target, "--json", "number,title,body,labels,assignees"], capture_output=True, text=True)
+        if res.returncode == 0 and res.stdout:
+            gh_data = json.loads(res.stdout)
+            assignees = [a.get("login", "") for a in gh_data.get("assignees", [])]
+            owner_role = "Steward"
+            if assignees:
+                owner_role = assignees[0]
+            found = {
+                "id": str(gh_data.get("number", target)),
+                "title": gh_data.get("title", f"Issue #{target}"),
+                "goal": gh_data.get("body", "").split("\n")[0] if gh_data.get("body") else "",
+                "acceptance": "Verify all acceptance criteria in issue body.",
+                "blueprint": "N/A",
+                "est": "1",
+                "owner": owner_role,
+                "depends": "-",
+                "epic_id": "N/A",
+                "epic_title": "General Task / Process Improvement"
+            }
+    except Exception:
+        pass
+
 if found:
     print(json.dumps(found))
 else:
@@ -344,7 +369,7 @@ else:
 ' 2>/dev/null || true)
 
     if [ -z "$STORY_DATA_JSON" ]; then
-        echo -e "${RED}Error: Story ID '$target_id' not found in $backlog_file.${NC}" >&2
+        echo -e "${RED}Error: Story ID or Issue '$target_id' not found in $backlog_file or GitHub.${NC}" >&2
         return 1
     fi
 }
