@@ -3,7 +3,7 @@
 //! This is only a stub to allow for the docker container to assess health
 //! This stub should be replaced during actual development cycle.
 
-use dark_city_core::AgentId;
+use dark_city_core::CitizenId;
 use serde::{Deserialize, Serialize};
 use std::env;
 
@@ -83,11 +83,11 @@ pub struct HealthResponse {
 
 /// Ledger account balance information.
 ///
-/// Reflects settled currency state for an agent in simulation credits.
+/// Reflects settled currency state for a citizen in simulation credits.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct AccountBalance {
-    /// Agent owning the account.
-    pub agent_id: AgentId,
+    /// Citizen owning the account.
+    pub citizen_id: CitizenId,
     /// Current settled balance in simulation credits.
     pub balance: i64,
 }

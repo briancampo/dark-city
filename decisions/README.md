@@ -8,6 +8,7 @@ This directory contains dated, numbered architectural decision records (ADRs) fo
 | [0002](0002-server-authoritative-simulation.md)     | Server-Authoritative Simulation & Thin Viewer Client | 2026-08-27 | System Architect | Accepted |
 | [0003](0003-multi-tenant-world-instances.md)        | Multi-Tenant World Instances                         | 2026-08-28 | System Architect | Accepted |
 | [0004](0004-observation-and-world-event-capture.md) | Observation & World-Event Capture                    | 2026-08-29 | System Architect | Accepted |
+| [0005](0005-citizen-vs-agent-standardization.md)    | Standardized Terminology: "Citizens" vs. "Agents"    | 2026-08-29 | Steward          | Accepted |
 
 ### Guidelines
 

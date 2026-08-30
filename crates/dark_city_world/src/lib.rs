@@ -1,7 +1,7 @@
 //! `dark_city_world` provides spatial hierarchy management, tool gating validation,
 //! and world state tracking for Dark City.
 
-use dark_city_core::{AccessError, AgentId, SpatialNode, SpatialNodeId, ToolLayer};
+use dark_city_core::{AccessError, CitizenId, SpatialNode, SpatialNodeId, ToolLayer};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
@@ -16,7 +16,7 @@ pub struct ToolDefinition {
     pub location_gated: Option<SpatialNodeId>,
     /// Energy cost deducted upon invocation.
     pub cost_energy: u32,
-    /// Whether explicit social consent from target agent is required.
+    /// Whether explicit social consent from target citizen is required.
     pub social_gated: bool,
 }
 
@@ -25,10 +25,10 @@ pub struct ToolDefinition {
 pub struct WorldState {
     /// Spatial nodes mapped by identifier.
     pub spatial_nodes: HashMap<SpatialNodeId, SpatialNode>,
-    /// Current agent locations mapped by agent identifier.
-    pub agent_positions: HashMap<AgentId, SpatialNodeId>,
-    /// Active agent energy levels mapped by agent identifier.
-    pub agent_energy: HashMap<AgentId, u32>,
+    /// Current citizen locations mapped by citizen identifier.
+    pub citizen_positions: HashMap<CitizenId, SpatialNodeId>,
+    /// Active citizen energy levels mapped by citizen identifier.
+    pub citizen_energy: HashMap<CitizenId, u32>,
 }
 
 impl WorldState {
@@ -42,30 +42,30 @@ impl WorldState {
         self.spatial_nodes.insert(node.id.clone(), node);
     }
 
-    /// Sets an agent's current position.
-    pub fn set_agent_position(&mut self, agent_id: AgentId, position: SpatialNodeId) {
-        self.agent_positions.insert(agent_id, position);
+    /// Sets a citizen's current position.
+    pub fn set_citizen_position(&mut self, citizen_id: CitizenId, position: SpatialNodeId) {
+        self.citizen_positions.insert(citizen_id, position);
     }
 
-    /// Sets an agent's current energy balance.
-    pub fn set_agent_energy(&mut self, agent_id: AgentId, energy: u32) {
-        self.agent_energy.insert(agent_id, energy);
+    /// Sets a citizen's current energy balance.
+    pub fn set_citizen_energy(&mut self, citizen_id: CitizenId, energy: u32) {
+        self.citizen_energy.insert(citizen_id, energy);
     }
 
-    /// Validates whether an agent has runtime access to execute a tool.
+    /// Validates whether a citizen has runtime access to execute a tool.
     pub fn validate_tool_access(
         &self,
-        agent_id: AgentId,
+        citizen_id: CitizenId,
         tool: &ToolDefinition,
     ) -> Result<(), AccessError> {
         if let Some(required_loc) = &tool.location_gated {
-            let current_pos = self.agent_positions.get(&agent_id);
+            let current_pos = self.citizen_positions.get(&citizen_id);
             if current_pos != Some(required_loc) {
                 return Err(AccessError::LocationDenied(required_loc.clone()));
             }
         }
 
-        let energy = self.agent_energy.get(&agent_id).copied().unwrap_or(0);
+        let energy = self.citizen_energy.get(&citizen_id).copied().unwrap_or(0);
         if energy < tool.cost_energy {
             return Err(AccessError::InsufficientEnergy);
         }
@@ -81,12 +81,12 @@ mod tests {
     #[test]
     fn test_location_and_energy_gating() {
         let mut world = WorldState::new();
-        let agent = AgentId::new();
+        let citizen = CitizenId::new();
         let town_hall = SpatialNodeId::new("town_hall");
         let tavern = SpatialNodeId::new("tavern");
 
-        world.set_agent_position(agent, tavern.clone());
-        world.set_agent_energy(agent, 100);
+        world.set_citizen_position(citizen, tavern.clone());
+        world.set_citizen_energy(citizen, 100);
 
         let proposal_tool = ToolDefinition {
             name: "SubmitProposal".to_string(),
@@ -98,18 +98,18 @@ mod tests {
 
         // Should fail due to location
         assert_eq!(
-            world.validate_tool_access(agent, &proposal_tool),
+            world.validate_tool_access(citizen, &proposal_tool),
             Err(AccessError::LocationDenied(town_hall.clone()))
         );
 
         // Move to town hall
-        world.set_agent_position(agent, town_hall);
-        assert_eq!(world.validate_tool_access(agent, &proposal_tool), Ok(()));
+        world.set_citizen_position(citizen, town_hall);
+        assert_eq!(world.validate_tool_access(citizen, &proposal_tool), Ok(()));
 
         // Drain energy
-        world.set_agent_energy(agent, 5);
+        world.set_citizen_energy(citizen, 5);
         assert_eq!(
-            world.validate_tool_access(agent, &proposal_tool),
+            world.validate_tool_access(citizen, &proposal_tool),
             Err(AccessError::InsufficientEnergy)
         );
     }

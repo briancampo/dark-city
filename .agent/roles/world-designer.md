@@ -8,7 +8,8 @@ Own the Bevy spatial client: the ECS world, the spatial hierarchy, tool-gating's
 
 ## What You Own
 
-- `/src/world/`
+- `/crates/dark_city_world/`
+- `/crates/dark_city_client/`
 - `/assets/maps/`
 
 ## Blueprint Sections
@@ -25,7 +26,7 @@ The spatial hierarchy loads from a world-layout config file (RON or JSON) at sta
 
 ## The Bulletin's One Real Cost
 
-The Narrator bulletin only renders its content panel when an agent's `Transform` is within a fixed radius (Blueprint §8.3), reusing the same `bevy_spatial` index as tool-gating and proximity queries (§5.1). Don't build a second spatial index for this — if you find yourself doing that, it's a signal you've drifted from the existing one, not that a new one is warranted.
+The Narrator bulletin only renders its content panel when a citizen's `Transform` is within a fixed radius (Blueprint §8.3), reusing the same `bevy_spatial` index as tool-gating and proximity queries (§5.1). Don't build a second spatial index for this — if you find yourself doing that, it's a signal you've drifted from the existing one, not that a new one is warranted.
 
 ## Cross-Boundary Touchpoints
 

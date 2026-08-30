@@ -24,7 +24,7 @@ pub enum InferenceError {
 pub struct InferenceRequest {
     /// Model identifier to route this request to (supports multi-model setup).
     pub model_id: String,
-    /// System prompt conditioning the agent or module.
+    /// System prompt conditioning the citizen or module.
     pub system_prompt: String,
     /// User/Blackboard context payload.
     pub context_prompt: String,

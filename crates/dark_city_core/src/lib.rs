@@ -8,25 +8,22 @@ use uuid::Uuid;
 
 /// Strongly-typed unique identifier for an in-world simulated citizen.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
-pub struct AgentId(pub Uuid);
+pub struct CitizenId(pub Uuid);
 
-/// Type alias standardizing in-world characters as `CitizenId`.
-pub type CitizenId = AgentId;
-
-impl AgentId {
+impl CitizenId {
     /// Generates a new random identifier for a citizen.
     pub fn new() -> Self {
         Self(Uuid::new_v4())
     }
 }
 
-impl Default for AgentId {
+impl Default for CitizenId {
     fn default() -> Self {
         Self::new()
     }
 }
 
-impl std::fmt::Display for AgentId {
+impl std::fmt::Display for CitizenId {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{}", self.0)
     }
@@ -114,14 +111,14 @@ pub enum ToolCall {
     /// Move citizen to a specific spatial node.
     GoToPlace { place_id: SpatialNodeId },
     /// Speak directly to another citizen.
-    SayToAgent {
+    SayToCitizen {
         target_id: CitizenId,
         message: String,
     },
     /// Post a public governance proposal at the governance venue.
     SubmitProposal { title: String, body: String },
     /// Transfer credits to another citizen.
-    PayAgent { target_id: CitizenId, amount: i64 },
+    PayCitizen { target_id: CitizenId, amount: i64 },
 }
 
 /// Common timestamped simulation event payload for event logging and AWI queries.
@@ -130,7 +127,7 @@ pub struct SimulationEvent {
     /// Unique event identifier.
     pub id: Uuid,
     /// Citizen associated with this event, if applicable.
-    pub agent_id: Option<CitizenId>,
+    pub citizen_id: Option<CitizenId>,
     /// Event category or name.
     pub event_type: String,
     /// Detailed JSON payload of the event.

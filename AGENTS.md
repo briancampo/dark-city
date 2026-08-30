@@ -7,7 +7,7 @@ Quick reference for any Dark Factory agent starting work on this codebase. This 
 To prevent confusion between the simulation and the development team, strictly adhere to these terms:
 
 - **Citizen:** An in-world simulated character living inside Dark City (e.g. Elena Vance, Samuel Ward). Never refer to in-game characters simply as "agents".
-- **Agent / Developer Agent:** A specialist AI coding agent on the Dark Factory development team (Steward, Tech Lead, System Architect, Local Inference Specialist, World Designer, Character Sculptor, QA/Instrumentation).
+- **Developer Agent:** A specialist AI coding agent on the Dark Factory development team (Steward, Tech Lead, System Architect, Local Inference Specialist, World Designer, Character Sculptor, QA/Instrumentation).
 - **Dark City:** The simulated world, runtime environment, and game systems.
 - **Dark Factory:** The development team, engineering processes, and repository automation.
 - **Viewer Client:** The thin, stateless `dark_city_client` application used to observe a running Dark City world. It renders what the backend broadcasts; it holds no simulation state and makes no simulation decisions (see [Decision 0002](decisions/0002-server-authoritative-simulation.md)).

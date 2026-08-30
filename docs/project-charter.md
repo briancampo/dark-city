@@ -111,7 +111,7 @@ Before a PR merges, it needs sign-off from both the Steward (process gate) and t
 - [ ] Code strictly aligns with World Blueprint & Design Foundations specifications
 - [ ] Abstractions are sound (no speculative generality, no leaky cross-crate abstractions)
 - [ ] Cross-boundary contracts (tool schemas, bridge DTOs, database types) match exact specifications
-- [ ] Async/Bevy thread safety verified: no blocking calls on the backend's headless ECS tick schedule, and no simulation state (`AgentState` or equivalent) held anywhere outside `dark_city_server` — including in `dark_city_client`, which must remain a thin renderer per [Decision 0002](../decisions/0002-server-authoritative-simulation.md)
+- [ ] Async/Bevy thread safety verified: no blocking calls on the backend's headless ECS tick schedule, and no simulation state (`CitizenState` or equivalent) held anywhere outside `dark_city_server` — including in `dark_city_client`, which must remain a thin renderer per [Decision 0002](../decisions/0002-server-authoritative-simulation.md)
 - [ ] Config-over-constants honored: dynamic parameters are loadable, not hardcoded into structs
 - [ ] Tool schemas, if touched, pass a type-and-effect contract review — argument shapes match `ToolDefinition` exactly
 - [ ] The implementation is consistent with existing patterns elsewhere in the codebase
