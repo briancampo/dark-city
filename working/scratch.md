@@ -6,7 +6,11 @@
 
 #### Feature Discussion:
 
-I'd like to take this session to work on a few project level improvements before we start full scale development:
+/session-start
+role: /steward
+domain: Process Improvement
+
+action: I'd like to take this session to work on a few project level improvements before we start full scale development:
 
 - The automated brief generator in our `gh-task-ops.sh` script is a great start but it lacks the necessary context and guidance for the implementing agent to be able to use effectively to complete the task. I'd like to make sure that if we are using that to create the brief that we make sure it is clear that is the starting point and that the agent must still add additional details and context to help inform the implementing developer.
 - I think we need a specific process (skill or workflow, not sure) for doing a PR review. The review done at the end of the implementation session is great but it will tend to focus on what was done in the session. A major point for a PR review is to bring in a different perspective and check for missed items or other issues that the original developer may have missed.
@@ -38,6 +42,15 @@ I'd like to take this session to work on a few project level improvements before
     - Documentation, Epic/Stories/Tasks, and other updates will need to be included in the work item to integrate the decision.
     - Part of a research brief's preparation should be to consider sequencing the research activity, the integration, and the potential work against the current project backlog schedule so we can decide where in the backlog to insert each effort. For instance if the proposed element does not impact the project until Phase 3 we may decide to defer adding the research/proposal development work until phase 2 and place the decision task as the last work element of phase 2. That would allow for the work to be sequenced into Phase 3 effectively. Conversely if there is an immediate impact we may decide to defer current work to complete all phases now and resume regularly scheduled work items once the decision has been made and any downstream work has been sequenced.
   - The two existing research briefs have some proposed sequencing included in them for reference that should be integrated into the project. This illustrates the structure and process I am proposing.
+
+====
+
+A few additional considerations: 
+- What is the difference between the items in workflows and the related skills version in the skills directory? I'm not clear on which will get used when how to keep them consistent. 
+- Is it clear when to use the backlog id and when to use the github issue id?  Will an agent be confused when trying to navigate that relationship? 
+
+
+====
 
 Fixes for gh-task-ops.sh:
 

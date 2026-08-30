@@ -19,6 +19,10 @@ To prevent confusion between the simulation and the development team, strictly a
 3. **[Team Charter](docs/project-charter.md)** — how the Dark Factory team works: roles, worktrees, engineering principles, Dual-Gate PR review, decision log.
 4. **This file** — quick reference once you've read the above.
 5. **[Session Start Workflow](.agent/workflows/session-start.md)** — the concrete checklist you run right now, at the top of every session.
+6. **Key Workflows:**
+   - **Lead Developer PR Review (`/review-pr`):** [`.agent/workflows/review-pr.md`](.agent/workflows/review-pr.md)
+   - **Epic Inception & Planning (`/plan-epic`):** [`.agent/workflows/plan-epic.md`](.agent/workflows/plan-epic.md)
+   - **Epic Retrospective & User Demo (`/conduct-retrospective`):** [`.agent/workflows/conduct-retrospective.md`](.agent/workflows/conduct-retrospective.md)
 
 You don't need to re-read all four every session — Session Start Workflow tells you what to actually check each time.
 
@@ -40,8 +44,8 @@ Every development task and agent session operates in an isolated git worktree cr
 
 | Role                       | Owns                                                                                     | Blueprint sections           |
 | -------------------------- | ---------------------------------------------------------------------------------------- | ---------------------------- |
-| Steward                    | Backlog dispatch, decision log, PR process gate                                          | —                            |
-| Tech Lead                  | Technical oversight, architecture, PR tech gate                                          | All `/crates/` & `/src/`     |
+| Steward                    | Backlog dispatch, decision log, PR process gate, Epic planning/retro                     | —                            |
+| Tech Lead                  | Technical oversight, architecture, PR review (/review-pr), brief enrichment              | All `/crates/` & `/src/`     |
 | System Architect           | `crates/dark_city_server/`, `migrations/`                                                | §2, §3.3, §6, §7, §10.2, §12 |
 | Local Inference Specialist | `crates/dark_city_inference/`, `grammars/`                                               | §3.3, §11                    |
 | World Designer             | `crates/dark_city_world/` (library), `crates/dark_city_client/` (viewer), `assets/maps/` | §3.4, §5, §8.3               |
@@ -53,12 +57,13 @@ Full detail, including QA and Tech Lead cross-cutting authorities and how worksp
 ## How We Work, Condensed
 
 - **Isolated Worktree:** Verify your current working directory matches your assigned worktree before making any changes.
-- **Dual-Gate PR Approval:** Every PR requires sign-off from both the Steward (process & verification) and the Tech Lead (architectural soundness & contracts) per [Team Charter §7](docs/project-charter.md#7-definition-of-done-pr-dual-gate).
+- **Dual-Gate PR Approval:** Every PR requires independent technical sign-off from the Tech Lead ([`/review-pr`](.agent/workflows/review-pr.md)) and process sign-off from the Steward per [Team Charter §7](docs/project-charter.md#7-definition-of-done-pr-dual-gate) before passing to the user to merge.
 - **Clean CI:** No merged code without passing tests (`cargo nextest run`) and clean `cargo clippy --all-targets -- -D warnings`, `cargo fmt --check`, and `cargo xtask check`.
-- **Atomic PRs:** Decompose large tickets rather than opening monolithic PRs.
+- **Atomic PRs:** Decompose large stories using Context-Window & Complexity Bounded Slicing.
+- **Session Completion Artifacts:** Every session logs its summary to [`logs/work-log.md`](logs/work-log.md) and scaffolds [`working/briefs/<id>-review.md`](working/briefs/) to prime the independent PR review.
 - **Public Interface Documentation:** Public functions and structs get doc comments explaining _why_ they exist.
 - **Log Decisions:** Anything the Blueprint/Foundations don't specify gets an ADR in `decisions/` before PR merge.
-- **Cross-Boundary Changes:** Open an RFC in `proposals/` before modifying files outside your role's directory ownership.
+- **Cross-Boundary Proposals:** Follow the 5-stage proposal lifecycle in [`proposals/`](proposals/README.md).
 - **Escalation:**
   - **Technical / architecture ambiguity:** Pause and raise to the **Tech Lead**.
   - **Scope / dependency ambiguity:** Pause and raise to the **Steward** and/or User as necessary.
@@ -75,6 +80,7 @@ scripts/gh-task-ops.sh list                # List backlog issues
 scripts/gh-task-ops.sh info <ticket_or_id> # View issue/ticket details (e.g. info 1.1.0 or info 2)
 scripts/gh-task-ops.sh assign <id>         # Setup branch & isolated worktree
 scripts/gh-task-ops.sh check               # Run all 4 quality gates (fmt, clippy, nextest, xtask)
+scripts/gh-task-ops.sh scaffold-review     # Scaffold review brief in working/briefs/<id>-review.md
 scripts/gh-task-ops.sh pr-create           # Run checks and create PR with DoD checklist
 scripts/gh-task-ops.sh pr-status           # Inspect PR CI checks and review status
 scripts/gh-task-ops.sh finish              # Squash-merge PR, cleanup worktree, sync main
@@ -121,8 +127,10 @@ assets/souls/                     Soul Markdown files (Character Sculptor)
 crates/dark_city_instrumentation/ AWI metrics pipeline (QA/Instrumentation)
 tests/                            Integration tests (QA/Instrumentation cross-cutting)
 xtask/                            Repository CI runner (System Architect / QA)
+logs/                             Durable work log and historical session archives (Steward maintains)
 decisions/                        Architecture decision records (Steward maintains)
-proposals/                        Cross-boundary RFCs (Tech Lead & Steward arbitrate)
+proposals/                        Cross-boundary RFCs and research briefs (Tech Lead & Steward arbitrate)
+working/briefs/                   Enriched mission briefs and review briefs
 ```
 
 `dark_city_world` and `dark_city_client` used to be one conflated concept (a single Bevy client). See [Decision 0002](decisions/0002-server-authoritative-simulation.md) for why they split: the simulation itself — including everything spatial and tool-gating — runs headlessly inside `dark_city_server`; `dark_city_client` is a separate, genuinely thin viewer with no simulation logic at all.

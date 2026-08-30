@@ -6,7 +6,6 @@
 set -e
 trap 'echo -e "\n🚨 Error occurred on line $LINENO. Agent/User: Please review the output above to diagnose the issue." >&2' ERR
 
-# --- Color Formatting ---
 BOLD='\033[1m'
 GREEN='\033[0;32m'
 BLUE='\033[0;34m'
@@ -17,13 +16,7 @@ NC='\033[0m'
 
 # --- Root Discovery ---
 get_project_root() {
-    local git_common
-    git_common=$(git rev-parse --git-common-dir 2>/dev/null || true)
-    if [ -n "$git_common" ]; then
-        PROJECT_ROOT=$(cd "$git_common/.." && pwd -P)
-    else
-        PROJECT_ROOT=$(git rev-parse --show-toplevel 2>/dev/null || pwd -P)
-    fi
+    PROJECT_ROOT=$(git rev-parse --show-toplevel 2>/dev/null || pwd -P)
 }
 
 get_project_root
@@ -66,14 +59,23 @@ DEFAULT_BASE_BRANCH="${DEFAULT_BASE_BRANCH:-main}"
 
 # Discover worktrees directory
 get_worktree_base_dir() {
+    local common_root=""
+    local git_common
+    git_common=$(git rev-parse --git-common-dir 2>/dev/null || true)
+    if [ -n "$git_common" ]; then
+        common_root=$(cd "$git_common/.." && pwd -P)
+    else
+        common_root="$PROJECT_ROOT"
+    fi
+
     if [ -n "$WORKTREES_DIR" ]; then
         WORKTREE_BASE="$WORKTREES_DIR"
+    elif [ -d "$(dirname "$common_root")/worktrees/${REPO_NAME:-dark-city}" ]; then
+        WORKTREE_BASE="$(dirname "$common_root")/worktrees/${REPO_NAME:-dark-city}"
+    elif [ -d "$(dirname "$common_root")/worktrees" ]; then
+        WORKTREE_BASE="$(dirname "$common_root")/worktrees/${REPO_NAME:-dark-city}"
     elif [ -d "$(dirname "$PROJECT_ROOT")/worktrees/${REPO_NAME:-dark-city}" ]; then
         WORKTREE_BASE="$(dirname "$PROJECT_ROOT")/worktrees/${REPO_NAME:-dark-city}"
-    elif [ -d "$(dirname "$PROJECT_ROOT")/worktrees" ]; then
-        WORKTREE_BASE="$(dirname "$PROJECT_ROOT")/worktrees/${REPO_NAME:-dark-city}"
-    elif [ -d "$(dirname "$PROJECT_ROOT")/worktrees/$(basename "$PROJECT_ROOT")" ]; then
-        WORKTREE_BASE="$(dirname "$PROJECT_ROOT")/worktrees/$(basename "$PROJECT_ROOT")"
     else
         WORKTREE_BASE="$PROJECT_ROOT/.worktrees"
     fi
@@ -752,6 +754,9 @@ case "$1" in
     check|verify)
         run_checks
         ;;
+    scaffold-review)
+        "$PROJECT_ROOT/scripts/gh-issue-ops.sh" scaffold-review "$2"
+        ;;
     pr-create)
         pr_create "$2" "$3" "$4"
         ;;
@@ -778,6 +783,7 @@ case "$1" in
         echo "  assign <issue_id> [slug]      Assign issue to @me, create branch, and setup isolated worktree"
         echo "  check                         Run full Dark Factory DoD gates (fmt, clippy, tests, xtask check)"
         echo "  status <issue_id> <status>    Update issue status on GitHub Project board (e.g. 'In Progress', 'Done')"
+        echo "  scaffold-review [issue_id]    Scaffold review brief in working/briefs/<id>-review.md"
         echo "  pr-create [options]           Push branch, run DoD checks, and create linked PR with handoff template"
         echo "  pr-status                     Display PR state, review status, and CI check results"
         echo "  finish [issue_id] [slug]      Commit, push, merge PR (squash), mark Done, teardown worktree, sync main"
@@ -785,14 +791,15 @@ case "$1" in
         echo "  sync                          Switch to main branch at repository root and pull latest changes"
         echo ""
         echo -e "${BOLD}Contextual Inference:${NC}"
-        echo "  When executed from inside an active task worktree or branch, 'info', 'pr-create', 'pr-status',"
-        echo "  'teardown', and 'finish' automatically detect the issue number and branch slug from the context."
+        echo "  When executed from inside an active task worktree or branch, 'info', 'scaffold-review', 'pr-create',"
+        echo "  'pr-status', 'teardown', and 'finish' automatically detect the issue number and branch slug from context."
         echo ""
         echo -e "${BOLD}Examples:${NC}"
         echo "  $0 list                                   # View open backlog issues"
         echo "  $0 info 1.1.0                             # View details & criteria for ticket [1.1.0]"
         echo "  $0 assign 2                               # Assigns #2 and creates worktree"
         echo "  $0 check                                  # Runs fmt, clippy, tests, and xtask"
+        echo "  $0 scaffold-review                        # Generates review brief from within worktree"
         echo "  $0 pr-create                              # Runs checks and opens PR from worktree"
         echo "  $0 finish                                 # Squash-merges PR, removes worktree, syncs main"
         echo ""

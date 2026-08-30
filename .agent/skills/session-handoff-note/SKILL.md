@@ -30,6 +30,15 @@ The PR description, per Session Start Workflow step 10. If the ticket isn't done
 - Anything not already captured in a decision log entry — a half-finished approach you tried and abandoned, a test that's flaky for a reason you haven't root-caused yet, a question you're planning to raise but haven't yet.
 ```
 
+## Session Completion Checklist (Charter §8)
+
+At the conclusion of an implementation session:
+1. **Work Log Entry:** Append a high-level summary of work and key discoveries to `logs/work-log.md`.
+2. **Review Brief:** Scaffold and enrich `working/briefs/<id>-review.md` using `scripts/gh-task-ops.sh scaffold-review`.
+3. **Session Handoff Note:** Include in review brief and attach to the PR description (or issue if in progress).
+4. **Machine Verification:** Run `scripts/gh-task-ops.sh check` to confirm clean fmt, clippy, tests, and xtask.
+5. **Open Pull Request:** Run `scripts/gh-task-ops.sh pr-create` including a body with relevant information.
+
 ## What Doesn't Belong Here
 
 - Architecture rationale → `decision-log-entry` skill instead.

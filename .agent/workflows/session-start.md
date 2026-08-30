@@ -3,6 +3,7 @@ description: How to bootstrap a new work session with proper context loading. Us
 ---
 
 # Dark Factory: Session Start Workflow
+
 ### v1.0
 
 Run this at the start of every session, before writing any code — whether it's your first session on a ticket or a continuation of one already in progress. It's short by design; skipping steps to save time is exactly the kind of shortcut the Team Charter exists to prevent.
@@ -29,11 +30,13 @@ Verify you are in your assigned worktree. Run `scripts/gh-task-ops.sh check` (or
 
 ## 6. Check Open Cross-Boundary Proposals
 
-Scan `/proposals/` for anything open that touches your directory or this ticket's area, so you're not about to collide with in-flight work from another role.
+Scan `/proposals/` for anything open that touches your directory or this ticket's area, so you're not about to collide with in-flight work from another role. If dependencies or conflicts, raise to the user.
 
 ## 7. Plan Before Writing Code
 
-Sketch your approach. If the ticket is bigger than something reviewable in one sitting, decompose it into a sequence of smaller tasks (Team Charter §4) and create task issues to work through the list.
+Sketch your approach. If the ticket is bigger than something completable in one sitting, decompose it into a sequence of smaller tasks (Team Charter §4) and create task issues to work through the list.
+
+## PAUSE And Reflect
 
 **If you hit a genuine ambiguity — something neither the Blueprint nor Foundations resolves — stop here.** Raise it to the Steward (and user if needed). Proceeding on a guess is the failure mode this whole process exists to prevent; a short pause is always cheaper than an undocumented wrong assumption compounding through later work.
 
@@ -47,12 +50,15 @@ Before opening a PR, check it against Team Charter §7 in full: tests, clean cli
 
 ## 10. Log and Hand Off
 
-- Write any decision log entries the session's work requires (§6 of the Charter) — before opening the PR, not after.
-- Open the PR using `scripts/gh-task-ops.sh pr-create`, which automatically populates the Definition of Done checklist and session handoff section in the PR description.
-- Reference the ticket ID, and request Steward & Tech Lead review.
+- Write any decision log entries the session's work requires (Charter §6) — before opening the PR, not after.
+- Append a session summary to `logs/work-log.md` capturing key deliverables, decisions, and downstream impact.
+- Scaffold and populate the review brief in `working/briefs/<id>-review.md` using `scripts/gh-task-ops.sh scaffold-review` to prime the independent review and then enrich with additional context.
+- Open the PR using `scripts/gh-task-ops.sh pr-create`, which automatically attaches the Definition of Done checklist and session handoff section in the PR description.
+- Engage the User for their review and provide:
+  - Synopsis, any issues, and request independent Lead Developer review (`/review-pr`) begin.
 
 ---
 
 ### Quick Reference (once this is second nature)
 
-Orient → read ticket → read spec → check decisions → check codebase is green → check proposals → plan (stop if genuinely blocked) → implement → self-review against DoD → log, hand off, open PR.
+Orient → read ticket → read spec → check decisions → check codebase is green → check proposals → plan (stop if genuinely blocked) → implement → self-review against DoD → log (work-log & review brief), open PR, hand off to user to start /review-pr.

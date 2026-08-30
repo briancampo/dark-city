@@ -17,13 +17,7 @@ NC='\033[0m'
 
 # --- Root Discovery ---
 get_project_root() {
-    local git_common
-    git_common=$(git rev-parse --git-common-dir 2>/dev/null || true)
-    if [ -n "$git_common" ]; then
-        PROJECT_ROOT=$(cd "$git_common/.." && pwd -P)
-    else
-        PROJECT_ROOT=$(git rev-parse --show-toplevel 2>/dev/null || pwd -P)
-    fi
+    PROJECT_ROOT=$(git rev-parse --show-toplevel 2>/dev/null || pwd -P)
 }
 
 get_project_root
@@ -56,20 +50,30 @@ detect_repo_info() {
 
 detect_repo_info
 
+# Project and workflow defaults
 GH_PROJECT_OWNER="${GH_PROJECT_OWNER:-$REPO_OWNER}"
 GH_PROJECT_NUMBER="${GH_PROJECT_NUMBER:-2}"
 GH_PROJECT_ID="${GH_PROJECT_ID:-}"
 
 # Discover worktrees directory
 get_worktree_base_dir() {
+    local common_root=""
+    local git_common
+    git_common=$(git rev-parse --git-common-dir 2>/dev/null || true)
+    if [ -n "$git_common" ]; then
+        common_root=$(cd "$git_common/.." && pwd -P)
+    else
+        common_root="$PROJECT_ROOT"
+    fi
+
     if [ -n "$WORKTREES_DIR" ]; then
         WORKTREE_BASE="$WORKTREES_DIR"
+    elif [ -d "$(dirname "$common_root")/worktrees/${REPO_NAME:-dark-city}" ]; then
+        WORKTREE_BASE="$(dirname "$common_root")/worktrees/${REPO_NAME:-dark-city}"
+    elif [ -d "$(dirname "$common_root")/worktrees" ]; then
+        WORKTREE_BASE="$(dirname "$common_root")/worktrees/${REPO_NAME:-dark-city}"
     elif [ -d "$(dirname "$PROJECT_ROOT")/worktrees/${REPO_NAME:-dark-city}" ]; then
         WORKTREE_BASE="$(dirname "$PROJECT_ROOT")/worktrees/${REPO_NAME:-dark-city}"
-    elif [ -d "$(dirname "$PROJECT_ROOT")/worktrees" ]; then
-        WORKTREE_BASE="$(dirname "$PROJECT_ROOT")/worktrees/${REPO_NAME:-dark-city}"
-    elif [ -d "$(dirname "$PROJECT_ROOT")/worktrees/$(basename "$PROJECT_ROOT")" ]; then
-        WORKTREE_BASE="$(dirname "$PROJECT_ROOT")/worktrees/$(basename "$PROJECT_ROOT")"
     else
         WORKTREE_BASE="$PROJECT_ROOT/.worktrees"
     fi
@@ -380,6 +384,7 @@ acc = data["acceptance"]
 bp = data["blueprint"]
 est = data["est"]
 owner = data["owner"]
+depends = data.get("depends", "-")
 epic_id = data["epic_id"]
 epic_title = data["epic_title"]
 
@@ -389,8 +394,12 @@ wt_path = f"{wt_base}/{branch}/"
 
 out_content = f"""# Dark Factory Mission Brief: Ticket [{sid}]
 
+> [!IMPORTANT]
+> **MISSION BRIEF SCAFFOLDING NOTICE:**
+> This document was automatically scaffolded as an initial baseline. Before dispatching to the implementing developer agent, the **Steward** (process, scope, dependencies) and **Tech Lead** (architecture, design patterns, testing standards) MUST review and enrich this brief with contextually aware, technically comprehensive guidance.
+
 **Dispatched Role:** {owner}
-**Technical Reviewer:** Tech Lead
+**Technical Reviewer / Lead:** Tech Lead
 **Process Reviewer / Gate:** Steward
 **Sprint / Epic:** Epic {epic_id} — {epic_title}
 **Assigned Ticket:** `[{sid}] {title}`
@@ -408,41 +417,81 @@ The Dark Factory team is executing **Epic {epic_id} ({epic_title})**:
 - **Dual-Gate Governance:** The Dual-Gate PR process is in effect ([Team Charter §7](../../docs/project-charter.md#7-definition-of-done-pr-dual-gate)).
 - **Worktree Isolation:** You must execute all work exclusively inside `{wt_path}`.
 
+### Relevant Blueprint & Design Foundations
+- **World Blueprint Reference:** {bp}
+- **Relevant Architecture Decisions (ADRs):** [Search `/decisions/` for active records applicable to this ticket]
+- **Target Crates & Directories:** [e.g. `crates/dark_city_core/`, `crates/dark_city_server/`, etc.]
+
 ---
 
 ## 2. Dispatched Scope & Acceptance Criteria
 
 ### Ticket [{sid}] {title}
 - **Role:** {owner}
-- **Blueprint Reference:** {bp}
-- **Goal:** {goal}
+- **Dependencies:** {depends}
+- **Estimate / Complexity:** {est} points
+- **Goal:**
+  > {goal}
 - **Gherkin Acceptance Criteria:**
   - {acc}
 
 ---
 
-## 3. Engineering Standards & Quality Checklist
+## 3. Technical Implementation Guidance & Design Invariants
 
-Before opening the PR, run through [Session Start Workflow](../../.agent/workflows/session-start.md) and verify the Dual-Gate Definition of Done:
+<!-- 
+TECH LEAD & STEWARD ENRICHMENT SECTION:
+Flesh out concrete implementation notes, patterns to follow, and pitfalls to avoid before dispatching.
+-->
 
-1. **Verify Worktree:** Ensure your working directory is `{wt_path}`.
-2. **Tests & Lints:**
-   ```bash
-   cargo fmt --check
-   cargo clippy --all-targets -- -D warnings
-   cargo nextest run
-   cargo xtask check
-   ```
-3. **Doc Comments:** Every public struct, function, and configuration field must have doc comments explaining *why* it exists.
-4. **Relative Markdown Links:** All documentation links must use relative paths.
-5. **No Dead Code:** No commented-out code blocks or orphan TODOs.
-6. **Escalations:**
-   - Technical/architecture ambiguities: raise to the **Tech Lead**.
-   - Scope/ticket boundaries: raise to the **Steward**.
+### Architecture & Design Pattern Alignment
+- **Domain Layering & Ownership:** Adhere strictly to crate boundaries ([Team Charter §3.1](../../docs/project-charter.md#3-team-structure)). Avoid leaking internal state or introducing cross-boundary coupling without an RFC.
+- **Config-over-Constants:** Do not hardcode magic numbers, spatial dimensions, or prompt parameters. Read from configuration structures or scenario seeds.
+- **No Speculative Generality:** Build only what is required to fulfill the acceptance criteria.
+
+### Concurrency & Thread Safety Constraints
+- **Bevy Main Schedule Safety:** Never execute blocking I/O, synchronous DB queries, or synchronous HTTP inference calls on the main Bevy schedule.
+- **Async Offloading:** Use `AsyncComputeTaskPool` or dedicated background channels for async tasks crossing into ECS systems.
+- **Multi-Tenant Scoping:** Ensure all database queries, event emissions, and spatial queries are partitioned by `world_id` ([Decision 0003](../../decisions/0003-multi-tenant-world-instances.md)).
+
+### Error Handling & Invariants
+- Use explicit domain `Result<T, DomainError>` types; avoid naked `unwrap()` or `expect()` in production paths.
+- Preserve consistent error variants in `dark_city_core`.
 
 ---
 
-## 4. Copy-Paste Session Bootstrap Prompt
+## 4. Test Strategy & Quality Verification
+
+<!-- 
+TECH LEAD ENRICHMENT SECTION:
+Outline required test coverage, failure modes to test, and non-vacuous assertion expectations.
+-->
+
+- **Test Integrity Standard:** Tests must provide genuine regression protection. Vacuous assertions (e.g. merely checking `is_ok()` without verifying resulting state mutations) are unacceptable.
+- **Required Coverage:**
+  - [ ] Unit tests covering core logic, state transitions, and calculation functions.
+  - [ ] Negative tests covering invalid inputs, energy exhaustion, location denial, or boundary errors.
+  - [ ] Integration tests verifying DB/WebSocket/ECS interactions where applicable.
+- **Pre-PR Verification Commands:**
+  ```bash
+  cargo fmt --check
+  cargo clippy --all-targets -- -D warnings
+  cargo nextest run
+  cargo xtask check
+  ```
+
+---
+
+## 5. Session Completion Requirements
+
+When implementation is complete:
+1. **Work Log Entry:** Append a high-level summary of work and key discoveries to `logs/work-log.md`.
+2. **Review Brief:** Scaffold and enrich `working/briefs/{sid}-review.md` using `scripts/gh-task-ops.sh scaffold-review {sid}`.
+3. **Open Pull Request:** Run `scripts/gh-task-ops.sh pr-create` to trigger machine gates and open the PR for Dual-Gate review.
+
+---
+
+## 6. Copy-Paste Session Bootstrap Prompt
 
 ```markdown
 /session-start
@@ -466,10 +515,117 @@ Run Session Start Workflow (.agent/workflows/session-start.md) in full, starting
 with open(out_file, "w", encoding="utf-8") as f:
     f.write(out_content)
 
-print(f"Scaffolded brief at: {out_file}")
+print(f"Scaffolded mission brief at: {out_file}")
 EOF
     echo -e "${GREEN}✅ Mission brief scaffolded successfully!${NC}"
-    echo -e "You can now review/edit ${CYAN}$out_file${NC} before creating the GitHub issue."
+    echo -e "Steward and Tech Lead: Please review and enrich ${CYAN}$out_file${NC} before creating the GitHub issue."
+}
+
+# --- Command: Scaffold Review Brief ---
+scaffold_review_brief() {
+    local story_id="$1"
+    local custom_out="$2"
+
+    if [ -z "$story_id" ]; then
+        infer_branch_info
+        story_id="${INFERRED_ISSUE}"
+    fi
+
+    if [ -z "$story_id" ]; then
+        echo -e "${RED}Error: Story ID is required (e.g. $0 scaffold-review 1.1.2).${NC}" >&2
+        return 1
+    fi
+
+    parse_backlog_story "$story_id"
+    get_worktree_base_dir
+
+    local out_file="$custom_out"
+    if [ -z "$out_file" ]; then
+        mkdir -p "$PROJECT_ROOT/working/briefs"
+        out_file="$PROJECT_ROOT/working/briefs/${story_id}-review.md"
+    fi
+
+    python3 - "$STORY_DATA_JSON" "$WORKTREE_BASE" "$GH_PROJECT_OWNER" "$GH_PROJECT_NUMBER" "$out_file" << 'EOF'
+import sys, json, re
+
+data = json.loads(sys.argv[1])
+wt_base = sys.argv[2]
+proj_owner = sys.argv[3]
+proj_num = sys.argv[4]
+out_file = sys.argv[5]
+
+sid = data["id"]
+title = data["title"]
+owner = data["owner"]
+epic_id = data["epic_id"]
+epic_title = data["epic_title"]
+
+slug_text = re.sub(r"[^a-z0-9]+", "-", title.lower()).strip("-")
+branch = f"{sid}-{slug_text}"
+
+out_content = f"""# Dark Factory Review Brief: Ticket [{sid}]
+
+**Author / Implementer:** {owner}
+**Assigned Reviewer:** Tech Lead (/review-pr)
+**Process Gate:** Steward
+**Sprint / Epic:** Epic {epic_id} — {epic_title}
+**Ticket:** `[{sid}] {title}`
+**Pull Request:** [PR #Pending / Link]
+**Worktree / Branch:** `{branch}`
+
+---
+
+## 1. Summary of Changes
+<!-- Concise summary of what was built and why -->
+- **Primary Deliverables:**
+  - ...
+- **Key Files Modified/Added:**
+  - `crates/...`
+
+---
+
+## 2. Architectural Invariants & Key Decisions
+<!-- Note any architectural choices, pattern applications, or ADR references -->
+- **Decisions Followed:**
+- **Invariants Maintained:**
+
+---
+
+## 3. Implementer Self-Identified Risk Areas & Edge Cases
+<!-- What was tricky? Where should the reviewer look extra carefully? -->
+- **Concurrency / Threading:**
+- **Boundary / Error Paths:**
+- **Potential Fragilities:**
+
+---
+
+## 4. Test Coverage & Verification Evidence
+- **New Tests Added:**
+  - `...`
+- **Quality Gates Run:**
+  - [x] `cargo fmt --check` clean
+  - [x] `cargo clippy --all-targets -- -D warnings` clean
+  - [x] `cargo nextest run` clean
+  - [x] `cargo xtask check` clean
+
+---
+
+## 5. Independent Review Guidance (For Tech Lead / Reviewer)
+> [!TIP]
+> **Reviewer Mandate:** Do not simply verify that the author's code does what the author intended. Conduct an independent, senior-perspective critical evaluation per the `/review-pr` workflow and `review-checklist.md`:
+> 1. Look for unhandled edge cases, concurrency hazards, and race conditions.
+> 2. Scrutinize test assertions for real regression value (no vacuous checks).
+> 3. Verify no speculative generality or hardcoded constants.
+> 4. Ensure public doc comments explain *why* types and methods exist.
+"""
+
+with open(out_file, "w", encoding="utf-8") as f:
+    f.write(out_content)
+
+print(f"Scaffolded review brief at: {out_file}")
+EOF
+    echo -e "${GREEN}✅ Review brief scaffolded successfully!${NC}"
+    echo -e "Please fill in implementation details in ${CYAN}$out_file${NC} before requesting PR review."
 }
 
 # --- Command: Create Issue ---
@@ -824,6 +980,10 @@ case "$1" in
         shift
         scaffold_brief "$@"
         ;;
+    scaffold-review|scaffold-review-brief)
+        shift
+        scaffold_review_brief "$@"
+        ;;
     create-story)
         shift
         create_story "$@"
@@ -859,6 +1019,7 @@ case "$1" in
         echo "                                Flags: --title, --body, --body-file, --parent, --label,"
         echo "                                       --status, --priority, --size, --estimate, --iteration"
         echo "  scaffold-brief <story_id>     Scaffold rich mission brief markdown in working/briefs/<id>-brief.md"
+        echo "  scaffold-review [story_id]    Scaffold standardized review brief in working/briefs/<id>-review.md"
         echo "  create-story <story_id>       Auto-create and dispatch story from backlog or existing brief"
         echo "                                Options: --parent <epic_num>, --from-brief"
         echo "  link <parent_num> <child_num> Link child issue to parent issue as a native GitHub sub-issue"
@@ -870,6 +1031,7 @@ case "$1" in
         echo ""
         echo -e "${BOLD}Examples:${NC}"
         echo "  $0 scaffold-brief 1.1.2                    # Generates working/briefs/1.1.2-brief.md"
+        echo "  $0 scaffold-review 1.1.2                   # Generates working/briefs/1.1.2-review.md"
         echo "  $0 create-story 1.1.2 --parent 3           # Dispatches story #1.1.2 linked to Epic #3"
         echo "  $0 create --title \"[Task] New tool\" --body-file task.md --parent 2 --size S"
         echo "  $0 link 3 2                                # Links story #2 as sub-issue of Epic #3"

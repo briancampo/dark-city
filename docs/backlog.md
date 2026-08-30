@@ -20,12 +20,12 @@ This backlog is the Steward's source of truth for dispatching work. A few conven
 
 ## 2. Phase Overview
 
-| Phase            | Theme                                                                    | Epics   | Design Foundations Ref |
-| ---------------- | ------------------------------------------------------------------------ | ------- | ---------------------- |
-| 1 — Seed         | Small population, full cognitive loop, minimal world                     | 1.0–1.6 | §13                    |
-| 2 — Society      | Governance, adaptive-access gating, the Narrator, world-event production | 2.1–2.6 | §13                    |
-| 3 — Civilization | Economy, tool authoring, full instrumentation, real scenarios            | 3.1–3.5 | §13                    |
-| 4 — Frontier     | Scale, heterogeneous models, long-horizon stability                      | 4.1–4.4 | §13                    |
+| Phase            | Theme                                                                     | Epics   | Design Foundations Ref |
+| ---------------- | ------------------------------------------------------------------------- | ------- | ---------------------- |
+| 1 — Seed         | Small population, full cognitive loop, minimal world                      | 1.0–1.6 | §13                    |
+| 2 — Society      | Governance, adaptive-access gating, Narrator, environmental events, goals | 2.1–2.8 | §13                    |
+| 3 — Civilization | Economy, tool authoring, full instrumentation, real scenarios             | 3.1–3.5 | §13                    |
+| 4 — Frontier     | Scale, heterogeneous models, long-horizon stability                       | 4.1–4.4 | §13                    |
 
 ---
 
@@ -186,13 +186,31 @@ Blueprint §3.5 (Observation, consumer), §10.1 (scenario `scripted_events`). Pe
 | ----- | -------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------- | --- | ---------------- | ------------ |
 | 2.6.1 | Scenario-scripted event producer | As a System Architect, I want a scheduler system that fires a scenario's `scripted_events` entries against `sim_clock` so that scenario-authored world events actually occur during a run (Decision 0004). | Given a scenario package with `scripted_events` entries, When the world's `sim_clock` crosses an entry's `trigger_time`, Then a `world_events` row is written with `source='scenario_scripted'`, the entry's predefined `salience`, and `occurred_at` set to `sim_clock` at the moment it fires; entries fire once, in order, and never re-fire. | §3.5, §10.1 | 5   | System Architect | 1.1.6, 1.5.1 |
 
+### Epic 2.7 — Environmental & External World Events **(new — from research brief)**
+
+Blueprint § TBD (assigned upon ADR ratification). Originates from `proposals/research-brief-environmental-world-events.md`.
+
+| ID    | Title                                               | Goal                                                                                                                                                                                                                                                         | Acceptance Criteria                                                                                                                                                                                                                                                                                                                                                                                                                              | Blueprint § | Est | Owner            | Depends On   |
+| ----- | --------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------- | --- | ---------------- | ------------ |
+| 2.7.1 | Environmental world-event research spike & decision | As a System Architect, I want to evaluate the Animus-persona shape, the new `world_events.source` value, and the scenario-level steering seed against this research brief, so that the eventual design is settled before implementation stories are drafted. | Given this research brief, when the spike concludes, then a decision document and log entry, and a Blueprint amendment draft exist covering: the persona shape (Option A vs. B), the `world_events.source` extension, the daily-trigger mechanism, and the `climate`/`external_affairs` scenario fields — with no implementation code produced by this ticket itself. Proposal Process is updated reflecting outcome and next steps are planned. | §4.1, §8.2  | 5   | System Architect | 2.3.5, 2.6.1 |
+
+### Epic 2.8 — Citizen Goal Generation **(new — from research brief)**
+
+Blueprint § TBD (assigned upon ADR ratification). Originates from `proposals/research-brief-goal-generation.md`.
+
+| ID    | Title                                     | Goal                                                                                                                                                                                                                                                          | Acceptance Criteria                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                | Blueprint § | Est | Owner              | Depends On                 |
+| ----- | ----------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------- | --- | ------------------ | -------------------------- |
+| 2.8.1 | Goal Generation research spike & decision | As a Character Sculptor, I want to evaluate cadence, schema shape, and Controller-interaction options for a Goal Generation module against real Phase 2 run data, so that the eventual design is grounded in observed social dynamics rather than assumption. | Given Phase 2's completed run data (2.5.2 findings) and this research brief, when the spike concludes, then the proposal process continues through the steps to garner a decision and Blueprint amendment draft exist covering: the `north_star_goal` field addition, the Goal Generation module's trigger cadence, the `citizen_goals` schema, and how proposed goals reach the Cognitive Controller/Planning — with no implementation code produced by this ticket itself. Proposal Process documentation is updated and next steps are planned. | §3.2, §4.4  | 5   | Character Sculptor | 1.2.4, 1.3.3, 1.3.4, 2.5.2 |
+
 ### Phase 2 Exit Criteria
 
-- All Epic 2.1–2.6 stories merged and passing CI.
+- All Epic 2.1–2.8 stories merged and passing CI (including research spikes 2.7.1 and 2.8.1).
 - The Phase 2 scenario runs at ~10 citizens for a sustained period with governance and the Narrator both active.
 - The 2.5.2 findings write-up documents actual observed governance behavior (or its absence) — this is the first real test of the decentralization decision in Design Foundations §7.
 - At least one scenario-scripted world event (2.6.1, Decision 0004) has fired during the Phase 2 run and been reflected in a Narrator edition, confirming the producer-to-Narrator pipeline works end to end.
 - AWI dashboard (M1/M2/M3/M9) reflects real run data, confirmed against manual spot-checks of the underlying logs.
+- Proposal process continues after completion of Epic 2.7 (Environmental Events) and Epic 2.8 (Goal Generation) clearing any dependencies and positioning implementation stories cleanly for Phase 3.
+  - Proposal process completed for all Epic 2.7 & 2.8 proposals through the full process including future planning for implementation work.
 
 ---
 
