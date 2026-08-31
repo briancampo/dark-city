@@ -67,3 +67,25 @@
 > 2. Scrutinize test assertions for real regression value (no vacuous checks).
 > 3. Verify no speculative generality or hardcoded constants.
 > 4. Ensure public doc comments explain _why_ types and methods exist. Evaluate for leaky abstraction and unnecessary public visibility.
+
+---
+
+## 6. Copy-Paste Review Bootstrap Prompt
+
+<!-- Brief creator: Ensure the prompt below contains the exact worktree path, branch, and brief links to bootstrap the Tech Lead. -->
+
+```markdown
+/tech-lead
+/review-pr
+Activate the Tech Lead for independent technical PR review.
+
+Assigned Task: Technical PR Review for Ticket [{ticket_id}] {ticket_title}
+Review Brief: @[working/briefs/{ticket_id}-review.md]
+Mission Brief: @[working/briefs/{ticket_id}-brief.md]
+Issue Id: {github issue ID}
+Worktree Path: {worktree_path}
+Git Branch: {branch_name}
+
+Read AGENTS.md, .agent/roles/tech-lead.md, and .agent/workflows/review-pr.md if not already in context.
+Conduct an independent, senior-perspective PR review per the 5-dimension quality audit in .agent/skills/pr-review-toolkit/SKILL.md and generate the review report.
+```

@@ -587,6 +587,7 @@ epic_title = data["epic_title"]
 
 slug_text = re.sub(r"[^a-z0-9]+", "-", title.lower()).strip("-")
 branch = f"{sid}-{slug_text}"
+wt_path = os.path.join(wt_base, branch)
 
 out_content = f"""# Dark Factory Review Brief: Ticket [{sid}]
 
@@ -642,6 +643,26 @@ out_content = f"""# Dark Factory Review Brief: Ticket [{sid}]
 > 2. Scrutinize test assertions for real regression value (no vacuous checks).
 > 3. Verify no speculative generality or hardcoded constants.
 > 4. Ensure public doc comments explain *why* types and methods exist.
+
+---
+
+## 6. Copy-Paste Review Bootstrap Prompt
+
+```markdown
+/tech-lead
+/review-pr
+Activate the Tech Lead for independent technical PR review.
+
+Assigned Task: Technical PR Review for Ticket [{sid}] {title}
+Review Brief: @[working/briefs/{sid}-review.md]
+Mission Brief: @[working/briefs/{sid}-brief.md]
+Issue ID: {issue_id}
+Worktree Path: {wt_path}
+Git Branch: {branch}
+
+Read AGENTS.md, .agent/roles/tech-lead.md, and .agent/workflows/review-pr.md if not already in context.
+Conduct an independent, senior-perspective PR review per the 5-dimension quality audit in .agent/skills/pr-review-toolkit/SKILL.md and generate the review report.
+```
 """
 
 with open(out_file, "w", encoding="utf-8") as f:
