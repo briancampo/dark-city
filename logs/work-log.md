@@ -12,15 +12,15 @@ Every developer agent session completing an assigned work item or ticket MUST ap
 
 ### Archiving & Discovery Rules
 
-1. **Active Log Window:** `logs/work-log.md` maintains the active log entries for the current development phase (up to ~100 entries or ~50KB).
+1. **Active Log Window:** `logs/work-log.md` maintains the active log entries for the current development phase (up to ~50 entries or ~25KB).
 2. **Phase Archiving:** Upon completion of a Phase (or when the active file reaches capacity), the Steward moves completed phase entries to `logs/archive/work-log-phase-<N>.md` (e.g. `logs/archive/work-log-phase-1.md`).
 3. **Searchability:** Every archive file is indexed in the table below with its ticket range, date span, and phase theme for rapid cross-session discovery.
 
 ### Archive Index
 
-| Archive File               | Short Description | Phase / Theme | Ticket Range | Date Range |
-| :------------------------- | :---------------- | :------------ | :----------- | :--------- |
-| [logs/[yyyy]/[mm]-xxxx.md] | —                 | -             | —            | —          |
+| Archive File               | Short Description | Phase Theme | Ticket Range | Date Range |
+| :------------------------- | :---------------- | :---------- | :----------- | :--------- |
+| [logs/[yyyy]/[mm]-xxxx.md] | —                 | -           | —            | —          |
 
 ---
 
@@ -43,6 +43,24 @@ Every developer agent session completing an assigned work item or ticket MUST ap
 ---
 
 ## Active Log Entries (Newest on Top)
+
+### [2026-08-30] Story/Task [1.1.1]: Postgres + pgvector Provisioning & Base Migrations
+
+- **Role:** System Architect
+- **Phase / Epic:** Phase 1 (Seed) — Epic 1.1 (Foundational Infrastructure)
+- **GH Issue/PR:** #1 / TBD
+- **Key Deliverables & Changes:**
+  - Added `sqlx` (v0.8) with PostgreSQL, Tokio, UUID, Chrono, JSON, and migration features to root `Cargo.toml` and `crates/dark_city_server/Cargo.toml`.
+  - Created base migration `migrations/0001_initial_schema.sql` provisioning `pgvector`, multi-tenant `worlds`, `citizens`, `simulation_events` (with `location_node_id` and producer-assigned `salience`), `world_events` (with `source`, `origin_citizen_id`, `salience`), and the `observable_events` union view.
+  - Implemented database connection pool provisioning and embedded migration execution in `crates/dark_city_server/src/db.rs`.
+  - Integrated database connection and migration startup execution in `crates/dark_city_server/src/main.rs`.
+  - Added unit tests and live integration tests against PostgreSQL with pgvector verifying tables, constraints, foreign keys, and union views.
+- **Key Architectural Decisions & Learnings:**
+  - Enforced simulated-time semantics per Decision 0004: `simulation_events.occurred_at` and `world_events.occurred_at` must represent `sim_clock` and never default to wall-clock `now()`.
+  - Enforced multi-tenant isolation per Decision 0003: `world_id` scoping foreign keys added across `citizens`, `simulation_events`, and `world_events`.
+  - Maintained clear provenance semantics: `world_events.origin_citizen_id` is attribution-only and does not affect citizen culpability metrics (M2).
+- **Downstream Impact & Follow-up Notes:**
+  - Database schema is fully primed for Axum server skeleton & per-world WebSockets (Story 1.1.2) and Memory & relationship schema (Story 1.3.1).
 
 ### [2026-08-30] Story/Task [N/A]: Developer Process & Quality System Modernization
 

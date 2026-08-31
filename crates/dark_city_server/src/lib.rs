@@ -3,6 +3,10 @@
 //! This is only a stub to allow for the docker container to assess health
 //! This stub should be replaced during actual development cycle.
 
+pub mod db;
+
+pub use db::{init_pool, init_pool_with_options, run_migrations, DbError};
+
 use dark_city_core::CitizenId;
 use serde::{Deserialize, Serialize};
 use std::env;
@@ -48,6 +52,8 @@ impl ServerConfig {
     /// - `DATABASE_URL`: PostgreSQL connection string
     /// - `INFERENCE_GATEWAY_URL`: Inference gateway URL
     pub fn from_env() -> Self {
+        dotenvy::dotenv().ok();
+
         let host = env::var("SERVER_HOST").unwrap_or_else(|_| "0.0.0.0".to_string());
         let port = env::var("SERVER_PORT")
             .ok()
@@ -123,6 +129,12 @@ mod tests {
 
     #[test]
     fn test_server_config_from_env() {
+        // Save existing env to prevent race conditions with concurrent tests
+        let orig_host = std::env::var("SERVER_HOST").ok();
+        let orig_port = std::env::var("SERVER_PORT").ok();
+        let orig_db = std::env::var("DATABASE_URL").ok();
+        let orig_inf = std::env::var("INFERENCE_GATEWAY_URL").ok();
+
         // Test parsing with explicitly set environment variables
         unsafe {
             std::env::set_var("SERVER_HOST", "127.0.0.1");
@@ -144,11 +156,24 @@ mod tests {
             Some("http://inference.local:8000")
         );
 
+        // Restore original env vars
         unsafe {
-            std::env::remove_var("SERVER_HOST");
-            std::env::remove_var("SERVER_PORT");
-            std::env::remove_var("DATABASE_URL");
-            std::env::remove_var("INFERENCE_GATEWAY_URL");
+            match orig_host {
+                Some(v) => std::env::set_var("SERVER_HOST", v),
+                None => std::env::remove_var("SERVER_HOST"),
+            }
+            match orig_port {
+                Some(v) => std::env::set_var("SERVER_PORT", v),
+                None => std::env::remove_var("SERVER_PORT"),
+            }
+            match orig_db {
+                Some(v) => std::env::set_var("DATABASE_URL", v),
+                None => std::env::remove_var("DATABASE_URL"),
+            }
+            match orig_inf {
+                Some(v) => std::env::set_var("INFERENCE_GATEWAY_URL", v),
+                None => std::env::remove_var("INFERENCE_GATEWAY_URL"),
+            }
         }
     }
 }

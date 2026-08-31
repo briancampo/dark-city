@@ -17,6 +17,18 @@ async fn main() {
         // Redact credentials in logs if present
         let sanitized = db_url.split('@').next_back().unwrap_or(db_url);
         info!("Database endpoint configured: ...@{}", sanitized);
+
+        match dark_city_server::init_pool(db_url).await {
+            Ok(pool) => {
+                info!("Database connection pool established.");
+                if let Err(err) = dark_city_server::run_migrations(&pool).await {
+                    tracing::error!("Failed to run database migrations: {:?}", err);
+                }
+            }
+            Err(err) => {
+                tracing::error!("Failed to connect to database: {:?}", err);
+            }
+        }
     } else {
         info!("No DATABASE_URL configured (running in unpersisted mode)");
     }

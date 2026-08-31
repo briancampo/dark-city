@@ -26,6 +26,17 @@ tokio = { version = "1.43", features = ["full"] }
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 async-trait = "0.1"
+dotenvy = "0.15"
+sqlx = { version = "0.8", default-features = false, features = [
+    "runtime-tokio",
+    "tls-rustls",
+    "postgres",
+    "uuid",
+    "chrono",
+    "json",
+    "macros",
+    "migrate",
+] }
 
 # Internal crate dependencies
 dark_city_core = { path = "crates/dark_city_core" }
